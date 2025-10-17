@@ -1,9 +1,18 @@
 "use client"
 import { Trash2 } from 'lucide-react';
 import { Input } from './ui/Input';
+import { UseFormRegister, FieldErrors } from "react-hook-form";
+import { ResumeFormData } from '@/models/resume';
 
+type EducationSectionProps = {
+    index: number;
+    register: UseFormRegister<ResumeFormData>;
+    remove: (index: number) => void;
+    canRemove: boolean;
+    errors: FieldErrors<ResumeFormData>;
+  };
 
-export default function EducationSection({ index, register, remove, canRemove, errors }) {
+export default function EducationSection({ index, register, remove, canRemove, errors }: EducationSectionProps) {
     return (
       <div className="mb-4 p-6 border-2 border-gray-200 rounded-lg relative">
         {canRemove && (

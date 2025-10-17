@@ -4,6 +4,8 @@ import {Plus, Trash2} from 'lucide-react';
 import { Input } from './ui/Input';
 
 
+
+
 export default function WorkExperienceSection({ index, register, control, remove, canRemove, errors, watch }) {
     const { fields, append, remove: removeResp } = useFieldArray({
       control,
