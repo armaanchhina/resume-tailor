@@ -2,6 +2,8 @@
 import { useRouter } from 'next/navigation';
 import { FileText, Upload, Sparkles, Briefcase, Edit2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Header } from './components/Header';
+import { Footer } from './components/Footer';
 // This is: app/page.tsx (Home Page)
 
 export default function Home() {
@@ -21,7 +23,7 @@ export default function Home() {
     setTimeout(() => {
       // For now, check if there's a resume in memory/state
       // Later this will be actual API call
-      const mockHasResume = true; // Change to true after uploading
+      const mockHasResume = false; // Change to true after uploading
       setHasResume(mockHasResume);
       setIsLoading(false);
     }, 500);
@@ -49,17 +51,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FileText className="w-7 h-7 text-indigo-600" />
-            <h1 className="text-2xl font-bold text-gray-900">ResumeTailor</h1>
-          </div>
-          <button className="px-4 py-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-            Sign In
-          </button>
-        </div>
-      </header>
+      <Header/>
 
       {/* Main Content */}
       <main className="max-w-5xl mx-auto px-6 py-16">
@@ -202,10 +194,7 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="text-center py-8 text-sm text-gray-500">
-        <p>Powered by AI • Your data is secure and never shared</p>
-      </footer>
+      <Footer/>
     </div>
   );
 }

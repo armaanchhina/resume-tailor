@@ -30,10 +30,35 @@ export default function UploadResumePage() {
     name: "education"
     });
 
-    const onSubmit = (data: ResumeFormData) => {
-        console.log("Resume data:", data);
-        alert("Resume saved!");
-    };
+    const onSubmit = async (data: ResumeFormData) => {
+        console.log(data)
+        setIsSaving(true);
+        try {
+          const skills = data.skills.technical
+            ? data.skills.technical.split(",").map(s => s.trim()).filter(Boolean)
+            : [];
+      
+          const res = await fetch("/api/resume", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...data, skills: { technical: skills } }),
+          });
+      
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err?.error || `Request failed with ${res.status}`);
+          }
+      
+          const json = await res.json();
+          console.log("Resume saved (dummy):", json);
+          router.push('/')
+        } catch (e) {
+          console.error("Failed to save resume:", e);
+          // TODO: toast error
+        } finally {
+          setIsSaving(false);
+        }
+      };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -41,7 +66,7 @@ export default function UploadResumePage() {
         <Header/>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-6 py-12">
+      <form onSubmit={handleSubmit(onSubmit)} className="max-w-4xl mx-auto px-6 py-12">
         <div className="bg-white rounded-2xl shadow-lg p-8">
           
           {/* Personal Information */}
@@ -248,7 +273,7 @@ export default function UploadResumePage() {
             </button>
           </div>
         </div>
-      </main>
+      </form>
 
 
       {/* Footer */}
