@@ -31,7 +31,6 @@ export default function UploadResumePage() {
     });
 
     const onSubmit = async (data: ResumeFormData) => {
-        console.log(data)
         setIsSaving(true);
         try {
           const skills = data.skills.technical
