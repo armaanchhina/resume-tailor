@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:16.3
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=resume-tailor
+      - POSTGRES_USER=docker
+      - POSTGRES_PASSWORD=docker # Required
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata/db:/var/lib/postgresql/data # Persist database data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "docker", "-d", "resume-tailor"]
+      interval: 5s
+      retries: 5
+      start_period: 10s
+  
+  pgadmin:
+    image: dpage/pgadmin4:8.9
+    depends_on:
+      - postgres
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=docker@docker.com # Required
+      - PGADMIN_DEFAULT_PASSWORD=docker # Required
+    volumes:
+      - .pgadmin4/servers.json:/pgadmin4/servers.json # Preload pgAdmin with databases
+
+  app:
+    build:
+      context: .
+    image: nextjs-dev
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./src:/app/src/
+      - ./prisma:/app/prisma
+    depends_on:
+      - postgres
