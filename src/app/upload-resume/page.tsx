@@ -9,7 +9,6 @@ import WorkExperienceSection from '../components/WorkExperienceSection';
 import EducationSection from '../components/EducationSection';
 import { ResumeFormData, defaultResumeValues } from '@/models/resume';
 import { Input } from '../components/ui/Input';
-// This would be: app/upload-resume/page.tsx
 
 export default function UploadResumePage() {
     const router = useRouter();
@@ -40,6 +39,7 @@ export default function UploadResumePage() {
           const res = await fetch("/api/resume", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({ ...data, skills: { technical: skills } }),
           });
       
