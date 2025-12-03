@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.17.1",
+    "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",
     "geist": "^1.5.1",
     "lucide-react": "^0.545.0",
