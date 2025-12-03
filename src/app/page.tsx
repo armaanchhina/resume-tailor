@@ -4,10 +4,12 @@ import { FileText, Upload, Sparkles, Briefcase, Edit2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { useAuth } from './lib/useAuth';
 // This is: app/page.tsx (Home Page)
 
 export default function Home() {
   const router = useRouter();
+  const {currentUser} = useAuth()
   const [hasResume, setHasResume] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -30,7 +32,7 @@ export default function Home() {
   };
 
   const handleUploadResume = () => {
-    router.push('/upload-resume');
+    router.push(currentUser ? "/upload-resume" : "/sign-in");
   };
 
   const handleTailorResume = () => {
