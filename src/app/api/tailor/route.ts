@@ -1,49 +1,61 @@
 import { NextResponse } from "next/server";
+import OpenAI from "openai";
+import { tailorResumePrompt } from "@/app/lib/prompt";
+import prisma from "@/app/lib/db";
+import { cookies } from "next/headers";
 
-export const dynamic = "force-dynamic";
+console.log("API KEY: ", process.env.OPENAI_KEY)
+const client = new OpenAI({ apiKey: process.env.OPENAI_KEY });
 
-export async function GET() {
-  return NextResponse.json({
-    ok: true,
-    route: "/api/tailor",
-    message: "Tailor API is alive.",
-    version: "0.1.0",
-  });
-}
 
 export async function POST(req: Request) {
-  try {
-    const body = await req.json().catch(() => ({}));
-    const { resume, jobDescription } = body || {};
+  const { jobDescription } = await req.json();
+  const session = await cookies()
+  const sessionToken = session.get("session")?.value
 
-    if (!resume || !jobDescription) {
-      return NextResponse.json(
-        { ok: false, error: "Provide `resume` and `jobDescription` in JSON body." },
-        { status: 400 }
-      );
-    }
+  const userSession = await prisma.session.findUnique({
+    where: {id: sessionToken},
+    include: { user: true}
+  })
 
-    // Fake “tailored” result
-    const fakeResult = {
-      summary: "This is a dummy tailored summary for your resume.",
-      bullets: [
-        "Aligned experience with key job requirements (placeholder).",
-        "Optimized keywords for ATS (placeholder).",
-        "Quantified achievements where possible (placeholder).",
-      ],
-    };
-
-    return NextResponse.json({
-      ok: true,
-      tailored: fakeResult,
-      received: { resumeLength: String(resume).length, jdLength: String(jobDescription).length },
-      timestamp: new Date().toISOString(),
-    });
-  } catch (err) {
-    console.error("Tailor API error:", err);
-    return NextResponse.json(
-      { ok: false, error: "Unexpected server error." },
-      { status: 500 }
-    );
+  if ( !userSession ){
+    return NextResponse.json({error: "Unauthorized"}, {status: 401})
   }
+
+  const resume = await prisma.resume.findUnique({
+    where: {userId: userSession.userId}
+  })
+
+  if ( !resume ){
+    return NextResponse.json({error: "Resume not found"}, { status: 404})
+  }
+
+  const prompt = tailorResumePrompt(resume, jobDescription)
+
+
+  const completion = await client.responses.create({
+    model: "gpt-5.1-chat-latest",
+    input: prompt,
+  });
+
+  const raw = completion.output_text
+  console.log("RESULT: ", raw)
+  const clean = raw
+  .replace(/```json/gi, "")
+  .replace(/```/g, "")
+  .trim()
+
+  let tailored
+  try {
+    tailored = JSON.parse(clean)
+  } catch (e) {
+    console.error("JSON parse failed. Cleaned result:", clean)
+    return NextResponse.json({
+      error: "Invalid JSON from model",
+      raw: clean
+    }, { status: 500 })
+  }
+
+  return NextResponse.json({ tailored });
 }
+

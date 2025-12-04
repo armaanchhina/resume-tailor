@@ -5,14 +5,14 @@ import { useEffect, useState } from 'react';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { useAuth } from './lib/useAuth';
-// This is: app/page.tsx (Home Page)
 
 export default function Home() {
   const router = useRouter();
   const {currentUser, authLoading} = useAuth()
   const [hasResume, setHasResume] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [ jobDescription, setJobDescription] = useState("")
+ 
   useEffect(() => {
     if (authLoading) return;
     checkForResume();
@@ -55,6 +55,10 @@ export default function Home() {
   };
 
   const handleTailorResume = () => {
+    if ( !jobDescription.trim()) {
+      return alert("Please paste a job description")
+    }
+    localStorage.setItem("JOB_DESCRIPTION", jobDescription)
     router.push('/tailor');
   };
 
@@ -128,6 +132,8 @@ export default function Home() {
               </p>
 
               <textarea
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
                 placeholder="Paste job description here...&#10;&#10;Example:&#10;We're looking for a Senior Full Stack Developer with:&#10;• 5+ years experience with React and Node.js&#10;• Strong knowledge of AWS and cloud infrastructure&#10;• Experience with microservices architecture..."
                 className="w-full h-48 p-4 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none resize-none text-sm mb-4 placeholder-gray-400 text-gray-800"
               />
