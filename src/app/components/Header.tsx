@@ -36,6 +36,8 @@ export function Header() {
                         credentials: "include"
                       });
 
+                      router.push("/")
+                      // Not best practice need to find suitable alternative
                       window.location.reload();
                     }}
                     className="px-4 py-2 text-sm text-red-600 hover:text-red-800 font-medium"

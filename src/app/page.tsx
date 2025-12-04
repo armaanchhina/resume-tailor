@@ -9,26 +9,45 @@ import { useAuth } from './lib/useAuth';
 
 export default function Home() {
   const router = useRouter();
-  const {currentUser} = useAuth()
+  const {currentUser, authLoading} = useAuth()
   const [hasResume, setHasResume] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
     checkForResume();
-  }, []);
+  }, [currentUser, authLoading]);
 
   const checkForResume = async () => {
     setIsLoading(true);
-    
-    // Simulate API call - Check if user has resume
-    // In real app: GET /api/resume
-    setTimeout(() => {
-      // For now, check if there's a resume in memory/state
-      // Later this will be actual API call
-      const mockHasResume = false; // Change to true after uploading
-      setHasResume(mockHasResume);
-      setIsLoading(false);
-    }, 500);
+
+    if (!currentUser){
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const res = await fetch("/api/resume", {
+        method: "GET",
+        credentials: "include"
+      });
+  
+      const json = await res.json();
+  
+      if (!json.ok) {
+        console.log("No resume yet.");
+        setHasResume(false);
+        return;
+      }
+  
+      setHasResume(json.hasResume);
+  
+    } catch (err) {
+      console.error("Error fetching resume:", err);
+      setHasResume(false);
+    } finally {
+      setIsLoading(false); 
+    }  
   };
 
   const handleUploadResume = () => {
