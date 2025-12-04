@@ -32,6 +32,71 @@ export interface WorkExperience {
       technical: string;
     };
   }
+
+  export interface LatexResumeData {
+    FULL_NAME: string;
+    PHONE: string;
+    EMAIL: string;
+    LINKEDIN: string;
+    GITHUB: string;
+  
+    SUMMARY?: string; // optional (your template only renders if present)
+  
+    education: {
+      school: string;
+      location: string;
+      degree: string;
+      startDate: string;
+      endDate: string;
+    }[];
+  
+    workExperience: {
+      company: string;
+      position: string;
+      location: string;
+      startDate: string;
+      endDate: string;
+      responsibilities: string[]; // 3–4 items
+    }[];
+  
+    projects?: {
+      title: string;
+      tech: string;
+      date: string;
+      bullets: string[];
+    }[];
+  
+    technicalSkills: {
+      category: string;
+      items: string;
+    }[];
+  }
+
+  export interface TailoredResume {
+    summary: string;
+  
+    workExperience: {
+      company: string;
+      position: string;
+      location: string;
+      startDate: string;
+      endDate: string;
+      current?: boolean;
+      responsibilities: string[];
+    }[];
+  
+    education: {
+      school: string;
+      location: string;
+      degree: string;
+      startDate: string;
+      endDate: string;
+    }[];
+  
+    skills: string[];
+  }
+  
+  
   
   // Optional: default values for the form
   export const defaultResumeValues: ResumeFormData = {
