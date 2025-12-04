@@ -35,11 +35,14 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - .env
+      - .env.docker
     environment:
       - NODE_ENV=development
+      - DATABASE_URL=postgresql://docker:docker@postgres:5432/resume-tailor
+
     volumes:
       - ./src:/app/src/
       - ./prisma:/app/prisma
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
