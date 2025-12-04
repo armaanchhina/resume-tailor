@@ -1,5 +1,5 @@
 "use client"
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { Upload, FileText, Check, Plus, Trash2, Briefcase, GraduationCap, Award } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Header } from '../components/Header';
@@ -9,14 +9,54 @@ import WorkExperienceSection from '../components/WorkExperienceSection';
 import EducationSection from '../components/EducationSection';
 import { ResumeFormData, defaultResumeValues } from '@/models/resume';
 import { Input } from '../components/ui/Input';
+import { useEffect } from "react";
 
 export default function UploadResumePage() {
     const router = useRouter();
     const [isSaving, setIsSaving] = useState(false);
-
-    const { register, control, handleSubmit, watch, formState: { errors } } = useForm<ResumeFormData>({
-        defaultValues: defaultResumeValues,
+    const { register, control, handleSubmit, watch, reset, formState: { errors } } = useForm<ResumeFormData>({
+      defaultValues: defaultResumeValues,
     });
+    
+    useEffect(() => {
+      const loadResume = async () => {
+        try {
+          const res = await fetch("/api/resume", {
+            credentials: "include"
+          })
+
+          if (!res.ok) {
+            return
+          }
+
+          const {resume} = await res.json()
+
+          if (!resume) {
+            return
+          }
+
+          reset({
+            personalInfo: {
+              fullName: resume.fullName,
+              email: resume.email,
+              phone: resume.phone || "",
+              linkedin: resume.linkedin || "",
+              github: resume.github || "",
+              portfolio: resume.portfolio || "",
+            },
+            summary: resume.summary || "",
+            workExperience: resume.workJson || [],
+            education: resume.educationJson || [],
+            skills: { technical: resume.skills?.join(", ") || "" }
+          });
+
+        } catch (err) {
+          console.error("Failed to load resume:", err);
+        }
+      }
+
+      loadResume()
+    }, [reset])
 
     // Field arrays for dynamic sections
     const { fields: workFields, append: appendWork, remove: removeWork } = useFieldArray({
@@ -32,28 +72,23 @@ export default function UploadResumePage() {
     const onSubmit = async (data: ResumeFormData) => {
         setIsSaving(true);
         try {
-          const skills = data.skills.technical
-            ? data.skills.technical.split(",").map(s => s.trim()).filter(Boolean)
-            : [];
-      
           const res = await fetch("/api/resume", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify({ ...data, skills: { technical: skills } }),
+            body: JSON.stringify(data)
           });
       
           if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
+            const err = await res.json();
             throw new Error(err?.error || `Request failed with ${res.status}`);
           }
       
           const json = await res.json();
-          console.log("Resume saved (dummy):", json);
+          console.log("Resume saved", json);
           router.push('/')
         } catch (e) {
           console.error("Failed to save resume:", e);
-          // TODO: toast error
         } finally {
           setIsSaving(false);
         }
