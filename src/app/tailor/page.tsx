@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { Sparkles } from "lucide-react";
-import { dummyData } from "../lib/prompt";
-import { LatexResumeData, TailoredResume } from "@/models/resume";
+import { TailoredResume } from "@/models/resume";
+import { useRouter } from "next/navigation";
 
 export default function TailorePage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [tailored, setTailored] = useState<any>(null);
   const [error, setError] = useState("");
@@ -108,7 +109,9 @@ export default function TailorePage() {
 
           {/* Work Experience */}
           <section className="mb-8">
-            <h3 className="font-semibold text-lg mb-4">Work Experience</h3>
+            <h3 className="font-semibold text-lg text-gray-800 mb-4">
+              Work Experience
+            </h3>
             {tailored.workExperience.map((job: any, idx: number) => (
               <div key={idx} className="mb-6">
                 <p className="font-bold text-gray-900">
@@ -128,7 +131,7 @@ export default function TailorePage() {
 
           {/* Skills */}
           <section className="mb-8">
-            <h3 className="font-semibold text-lg mb-3">Skills</h3>
+            <h3 className="font-semibold text-lg text-gray-800 mb-3">Skills</h3>
 
             <div className="space-y-3">
               {tailored?.skills?.technical?.map((group: any, idx: number) => (
@@ -152,14 +155,22 @@ export default function TailorePage() {
             </div>
           </section>
 
-          {/* Download Buttons */}
           <div className="flex gap-3 pt-6 border-t">
-            <button className="px-6 py-3 bg-gray-200 rounded-lg font-medium hover:bg-gray-300">
-              Copy JSON
-            </button>
             <button
+              type="button"
+              onClick={() => router.push("/")}
+              className="flex px-6 py-3 font-medium text-indigo-600 
+               border border-indigo-200 rounded-lg 
+               hover:bg-indigo-50 transition"
+            >
+              ← Back
+            </button>
+
+            <button
+              type="button"
               onClick={() => generatePDF(tailored)}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700"
+              className="flex px-6 py-3 bg-indigo-600 text-white 
+               rounded-lg font-semibold hover:bg-indigo-700 transition"
             >
               Download PDF
             </button>
