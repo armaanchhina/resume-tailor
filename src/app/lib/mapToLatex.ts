@@ -9,6 +9,9 @@ export function mapTailoredToLatex(resume: any, tailored: any) {
       Array.isArray(s.items) ? s.items.join(", ") : String(s.items ?? "")
     ),
   }));
+
+  const educationSorted = sortMostRecentFirst(resume.educationJson ?? [])
+  const workSorted = sortMostRecentFirst(tailored.workExperience ?? [])
   return {
     FULL_NAME: escapeLatex(resume.fullName),
     PHONE: resume.phone,
@@ -19,7 +22,7 @@ export function mapTailoredToLatex(resume: any, tailored: any) {
 
     GITHUB: escapeLatex(resume.github),
 
-    education: resume.educationJson.map((e) => ({
+    education: educationSorted.map((e: any) => ({
       school: escapeLatex(e.school),
       degree: escapeLatex(e.degree),
       location: escapeLatex(e.location),
@@ -27,7 +30,7 @@ export function mapTailoredToLatex(resume: any, tailored: any) {
       endDate: escapeLatex(formatMonthYear(e.endDate ?? "")),
     })),
 
-    workExperience: tailored.workExperience.map((w) => ({
+    workExperience: workSorted.map((w: any) => ({
       company: escapeLatex(w.company),
       position: escapeLatex(w.position),
       location: escapeLatex(w.location),
@@ -73,4 +76,29 @@ function formatMonthYear(str: string): string {
   const longMonth = date.toLocaleString('default', {month: 'long'})
   const stringMonth = shortMonth !== longMonth ? `${shortMonth}.` : shortMonth
   return `${stringMonth} ${year}`
+}
+
+type YM = string | null | undefined
+
+function ymToNumber(ym: YM): number {
+  // "2024-05" -> 202405
+  if (!ym) return -Infinity
+  const [y, m] = ym.split("-")
+  const yy = Number(y)
+  const mm = Number(m)
+  if (!Number.isFinite(yy) || !Number.isFinite(mm)) return -Infinity
+  return yy * 100 + mm
+}
+
+function sortMostRecentFirst<T extends { startDate?: YM; endDate?: YM; current?: boolean }>(
+  arr: T[]
+): T[] {
+  return [...arr].sort((a, b) => {
+    const aEnd = a.current ? Infinity : ymToNumber(a.endDate)
+    const bEnd = b.current ? Infinity : ymToNumber(b.endDate)
+
+    if (bEnd !== aEnd) return bEnd - aEnd
+
+    return ymToNumber(b.startDate) - ymToNumber(a.startDate)
+  })
 }
