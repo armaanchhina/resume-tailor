@@ -44,7 +44,11 @@ export function mapTailoredToLatex(resume: any, tailored: any) {
 
 function escapeLatex(str: string) {
   if (!str) return "";
-  return str
+
+  // Remove zero-width / word-joiner characters that break pdflatex
+  const cleaned = str.replace(/[\u200B-\u200D\u2060\uFEFF]/g, "");
+
+  return cleaned
     .replace(/\\/g, "\\textbackslash{}")
     .replace(/&/g, "\\&")
     .replace(/%/g, "\\%")
@@ -56,6 +60,7 @@ function escapeLatex(str: string) {
     .replace(/\^/g, "\\textasciicircum{}")
     .replace(/~/g, "\\textasciitilde{}");
 }
+
 
 function formatMonthYear(str: string): string {
   if (!str) return ""
