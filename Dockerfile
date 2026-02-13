@@ -1,9 +1,13 @@
-FROM node:18-alpine
-
+FROM node:18-bullseye
 WORKDIR /app
 
-RUN apk update && apk upgrade
-RUN apk add --no-cache openssl
+RUN apt-get update && apt-get install -y \
+    texlive \
+    texlive-latex-extra \
+    texlive-fonts-recommended \
+    texlive-luatex \
+    ghostscript \
+    && apt-get clean
 
 
 COPY package*.json ./

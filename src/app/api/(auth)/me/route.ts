@@ -5,7 +5,6 @@ import { NextResponse } from "next/server";
 export async function GET() {
     const store = await cookies()
     const sessionToken = store.get("session")?.value
-
     if (!sessionToken) {
         return NextResponse.json({user: null})
     }
