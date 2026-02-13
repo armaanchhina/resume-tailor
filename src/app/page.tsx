@@ -1,7 +1,7 @@
 "use client"
 import { useRouter } from 'next/navigation';
 import { FileText, Upload, Sparkles, Briefcase, Edit2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { useAuth } from './lib/useAuth';
@@ -13,12 +13,10 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [ jobDescription, setJobDescription] = useState("")
  
-  useEffect(() => {
-    if (authLoading) return;
-    checkForResume();
-  }, [currentUser, authLoading]);
 
-  const checkForResume = async () => {
+  
+
+  const checkForResume = useCallback(async () => {
     setIsLoading(true);
 
     if (!currentUser){
@@ -48,16 +46,18 @@ export default function Home() {
     } finally {
       setIsLoading(false); 
     }  
-  };
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    checkForResume();
+  }, [authLoading, checkForResume]);
 
   const handleUploadResume = () => {
     router.push(currentUser ? "/upload-resume" : "/sign-in");
   };
 
   const handleTailorResume = () => {
-    if ( !jobDescription.trim()) {
-      return alert("Please paste a job description")
-    }
     localStorage.setItem("JOB_DESCRIPTION", jobDescription)
     router.push('/tailor');
   };
@@ -147,6 +147,7 @@ export default function Home() {
                   Edit Resume
                 </button>
                 <button
+                  disabled={!jobDescription.trim()}
                   onClick={handleTailorResume}
                   className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-lg flex items-center justify-center gap-2"
                 >
