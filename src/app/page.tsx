@@ -157,7 +157,7 @@ export default function Home() {
             </div>
 
             {/* Recent Tailored Resumes */}
-            <div className="mt-8 bg-white rounded-xl shadow-sm p-6">
+            {/* <div className="mt-8 bg-white rounded-xl shadow-sm p-6">
               <h4 className="font-semibold text-gray-900 mb-4">Recent Tailored Resumes</h4>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer">
@@ -185,7 +185,7 @@ export default function Home() {
                   </button>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         )}
 
