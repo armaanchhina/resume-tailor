@@ -29,8 +29,11 @@ export interface WorkExperience {
     workExperience: WorkExperience[];
     education: Education[];
     skills: {
-      technical: string;
-    };
+      technical: Array<{
+        category: string
+        items: string
+      }>
+    }
   }
 
   export interface LatexResumeData {
@@ -130,7 +133,14 @@ export interface WorkExperience {
       },
     ],
     skills: {
-      technical: "",
-    },
+      technical: [
+        { category: "Languages", items: "" },
+        { category: "Frontend", items: "" },
+        { category: "Backend", items: "" },
+        { category: "Databases", items: "" },
+        { category: "Cloud & DevOps", items: "" },
+      ]
+    }
+    ,
   };
   

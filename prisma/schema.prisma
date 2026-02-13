@@ -47,9 +47,9 @@ model Resume {
   github        String?
   portfolio     String?
   summary       String?
-  skills        String[] 
   workJson      Json
   educationJson Json
+  technicalSkillsJson Json? 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

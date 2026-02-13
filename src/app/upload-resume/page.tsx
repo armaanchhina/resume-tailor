@@ -1,108 +1,150 @@
-"use client"
-import { use, useState } from 'react';
-import { Upload, FileText, Check, Plus, Trash2, Briefcase, GraduationCap, Award } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { Header } from '../components/Header';
-import { Footer } from '../components/Footer';
-import { useForm, useFieldArray } from 'react-hook-form';
-import WorkExperienceSection from '../components/WorkExperienceSection';
-import EducationSection from '../components/EducationSection';
-import { ResumeFormData, defaultResumeValues } from '@/models/resume';
-import { Input } from '../components/ui/Input';
+"use client";
+import { use, useState } from "react";
+import {
+  Upload,
+  FileText,
+  Check,
+  Plus,
+  Trash2,
+  Briefcase,
+  GraduationCap,
+  Award,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Header } from "../components/Header";
+import { Footer } from "../components/Footer";
+import { useForm, useFieldArray } from "react-hook-form";
+import WorkExperienceSection from "../components/WorkExperienceSection";
+import EducationSection from "../components/EducationSection";
+import { ResumeFormData, defaultResumeValues } from "@/models/resume";
+import { Input } from "../components/ui/Input";
 import { useEffect } from "react";
 
 export default function UploadResumePage() {
-    const router = useRouter();
-    const [isSaving, setIsSaving] = useState(false);
-    const { register, control, handleSubmit, watch, reset, formState: { errors } } = useForm<ResumeFormData>({
-      defaultValues: defaultResumeValues,
-    });
-    
-    useEffect(() => {
-      const loadResume = async () => {
-        try {
-          const res = await fetch("/api/resume", {
-            credentials: "include"
-          })
+  const router = useRouter();
+  const [isSaving, setIsSaving] = useState(false);
+  const {
+    register,
+    control,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<ResumeFormData>({
+    defaultValues: defaultResumeValues,
+  });
 
-          if (!res.ok) {
-            return
-          }
+  useEffect(() => {
+    const loadResume = async () => {
+      try {
+        const res = await fetch("/api/resume", {
+          credentials: "include",
+        });
 
-          const {resume} = await res.json()
-
-          if (!resume) {
-            return
-          }
-
-          reset({
-            personalInfo: {
-              fullName: resume.fullName,
-              email: resume.email,
-              phone: resume.phone || "",
-              linkedin: resume.linkedin || "",
-              github: resume.github || "",
-              portfolio: resume.portfolio || "",
-            },
-            summary: resume.summary || "",
-            workExperience: resume.workJson || [],
-            education: resume.educationJson || [],
-            skills: { technical: resume.skills?.join(", ") || "" }
-          });
-
-        } catch (err) {
-          console.error("Failed to load resume:", err);
+        if (!res.ok) {
+          return;
         }
+
+        const { resume } = await res.json();
+
+        if (!resume) {
+          return;
+        }
+
+        reset({
+          personalInfo: {
+            fullName: resume.fullName,
+            email: resume.email,
+            phone: resume.phone || "",
+            linkedin: resume.linkedin || "",
+            github: resume.github || "",
+            portfolio: resume.portfolio || "",
+          },
+          summary: resume.summary || "",
+          workExperience: resume.workJson || [],
+          education: resume.educationJson || [],
+          skills: {
+            technical: (resume.technicalSkillsJson ?? []).map((s: any) => ({
+              category: s.category ?? "",
+              items: Array.isArray(s.items)
+                ? s.items.join(", ")
+                : s.items ?? "",
+            })),
+          },
+        });
+      } catch (err) {
+        console.error("Failed to load resume:", err);
+      }
+    };
+
+    loadResume();
+  }, [reset]);
+
+  // Field arrays for dynamic sections
+  const {
+    fields: workFields,
+    append: appendWork,
+    remove: removeWork,
+  } = useFieldArray({
+    control,
+    name: "workExperience",
+  });
+
+  const {
+    fields: eduFields,
+    append: appendEdu,
+    remove: removeEdu,
+  } = useFieldArray({
+    control,
+    name: "education",
+  });
+
+  // add near other field arrays
+  const {
+    fields: skillFields,
+    append: appendSkill,
+    remove: removeSkill,
+  } = useFieldArray({
+    control,
+    name: "skills.technical",
+  });
+
+  const onSubmit = async (data: ResumeFormData) => {
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err?.error || `Request failed with ${res.status}`);
       }
 
-      loadResume()
-    }, [reset])
-
-    // Field arrays for dynamic sections
-    const { fields: workFields, append: appendWork, remove: removeWork } = useFieldArray({
-    control,
-    name: "workExperience"
-    });
-
-    const { fields: eduFields, append: appendEdu, remove: removeEdu } = useFieldArray({
-    control,
-    name: "education"
-    });
-
-    const onSubmit = async (data: ResumeFormData) => {
-        setIsSaving(true);
-        try {
-          const res = await fetch("/api/resume", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify(data)
-          });
-      
-          if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err?.error || `Request failed with ${res.status}`);
-          }
-      
-          const json = await res.json();
-          console.log("Resume saved", json);
-          router.push('/')
-        } catch (e) {
-          console.error("Failed to save resume:", e);
-        } finally {
-          setIsSaving(false);
-        }
-      };
+      const json = await res.json();
+      console.log("Resume saved", json);
+      router.push("/");
+    } catch (e) {
+      console.error("Failed to save resume:", e);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
-        <Header/>
+      <Header />
 
       {/* Main Content */}
-      <form onSubmit={handleSubmit(onSubmit)} className="max-w-4xl mx-auto px-6 py-12">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="max-w-4xl mx-auto px-6 py-12"
+      >
         <div className="bg-white rounded-2xl shadow-lg p-8">
-          
           {/* Personal Information */}
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -111,36 +153,48 @@ export default function UploadResumePage() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name *
+                </label>
                 <Input
-                  {...register("personalInfo.fullName", { required: "Name is required" })}
+                  {...register("personalInfo.fullName", {
+                    required: "Name is required",
+                  })}
                   placeholder="John Doe"
                 />
                 {errors.personalInfo?.fullName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.personalInfo.fullName.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.personalInfo.fullName.message}
+                  </p>
                 )}
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email *
+                </label>
                 <Input
-                  {...register("personalInfo.email", { 
+                  {...register("personalInfo.email", {
                     required: "Email is required",
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: "Invalid email address"
-                    }
+                      message: "Invalid email address",
+                    },
                   })}
                   type="email"
                   placeholder="john@example.com"
                 />
                 {errors.personalInfo?.email && (
-                  <p className="text-red-500 text-xs mt-1">{errors.personalInfo.email.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.personalInfo.email.message}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone
+                </label>
                 <Input
                   {...register("personalInfo.phone")}
                   type="tel"
@@ -149,7 +203,9 @@ export default function UploadResumePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  LinkedIn
+                </label>
                 <Input
                   {...register("personalInfo.linkedin")}
                   type="url"
@@ -158,7 +214,9 @@ export default function UploadResumePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">GitHub</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  GitHub
+                </label>
                 <Input
                   {...register("personalInfo.github")}
                   type="url"
@@ -167,7 +225,9 @@ export default function UploadResumePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Portfolio</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Portfolio
+                </label>
                 <Input
                   {...register("personalInfo.portfolio")}
                   type="url"
@@ -179,7 +239,9 @@ export default function UploadResumePage() {
 
           {/* Professional Summary */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Professional Summary</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Professional Summary
+            </h2>
             <textarea
               {...register("summary")}
               placeholder="Brief overview of your experience and skills..."
@@ -196,15 +258,17 @@ export default function UploadResumePage() {
               </h2>
               <button
                 type="button"
-                onClick={() => appendWork({
-                  company: '',
-                  position: '',
-                  location: '',
-                  startDate: '',
-                  endDate: '',
-                  current: false,
-                  responsibilities: ['']
-                })}
+                onClick={() =>
+                  appendWork({
+                    company: "",
+                    position: "",
+                    location: "",
+                    startDate: "",
+                    endDate: "",
+                    current: false,
+                    responsibilities: [""],
+                  })
+                }
                 className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
@@ -235,13 +299,15 @@ export default function UploadResumePage() {
               </h2>
               <button
                 type="button"
-                onClick={() => appendEdu({
-                  school: '',
-                  degree: '',
-                  major: '',
-                  graduationDate: '',
-                  gpa: ''
-                })}
+                onClick={() =>
+                  appendEdu({
+                    school: "",
+                    degree: "",
+                    major: "",
+                    graduationDate: "",
+                    gpa: "",
+                  })
+                }
                 className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
@@ -267,14 +333,64 @@ export default function UploadResumePage() {
               <Award className="w-6 h-6 text-indigo-600" />
               Skills
             </h2>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Technical Skills (comma separated)
-              </label>
-              <Input
-                {...register("skills.technical")}
-                placeholder="React, Node.js, Python, AWS, Docker"
-              />
+
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm text-gray-600">
+                Add categories like Languages, Frontend, Backend, etc.
+              </p>
+              <button
+                type="button"
+                onClick={() => appendSkill({ category: "", items: "" })}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add Category
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {skillFields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className="grid grid-cols-1 md:grid-cols-3 gap-3 items-start"
+                >
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Category
+                    </label>
+                    <Input
+                      {...register(
+                        `skills.technical.${index}.category` as const,
+                        { required: true }
+                      )}
+                      placeholder="Languages"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Items (comma separated)
+                    </label>
+                    <div className="flex gap-2">
+                      <Input
+                        {...register(
+                          `skills.technical.${index}.items` as const
+                        )}
+                        placeholder="Python, TypeScript, Java, SQL"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSkill(index)}
+                        disabled={skillFields.length <= 1}
+                        className="px-3 py-2 border rounded-lg text-gray-600 hover:text-gray-900 disabled:opacity-40"
+                        title="Remove category"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 
@@ -282,7 +398,7 @@ export default function UploadResumePage() {
           <div className="flex gap-3 pt-6 border-t">
             <button
               type="button"
-              onClick={() => router.push('/')}
+              onClick={() => router.push("/")}
               className="px-6 py-3 text-gray-600 hover:text-gray-900 font-medium transition"
             >
               Cancel
@@ -309,9 +425,8 @@ export default function UploadResumePage() {
         </div>
       </form>
 
-
       {/* Footer */}
-      <Footer/>
+      <Footer />
     </div>
   );
 }

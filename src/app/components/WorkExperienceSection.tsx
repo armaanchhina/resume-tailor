@@ -70,7 +70,7 @@ export default function WorkExperienceSection({ index, register, control, remove
               {...register(`workExperience.${index}.endDate`)}
               type="month"
               disabled={currentValue}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none disabled:bg-gray-100"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none text-gray-700 disabled:bg-gray-100"
             />
           </div>
           

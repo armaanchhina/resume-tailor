@@ -4,6 +4,22 @@ import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
+function toTechnicalSkillsJson(raw: any) {
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .map((s) => {
+      const category = (s?.category ?? "").trim();
+      const itemsArr = String(s?.items ?? "")
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean);
+
+      return { category, items: itemsArr };
+    })
+    .filter((s) => s.category && s.items.length > 0);
+}
+
 export async function POST(req: Request) {
     try {
       const store = await cookies()
@@ -32,10 +48,7 @@ export async function POST(req: Request) {
       const body = await req.json();
 
 
-      const rawSkills = body.skills?.technical || "";
-      const skills = rawSkills.split(",")
-        .map((s: string) => s.trim())
-        .filter(Boolean);
+      const technicalSkillsJson = toTechnicalSkillsJson(body?.skills?.technical);
         
         const resume = await prisma.resume.upsert({
         where: {userId},
@@ -47,7 +60,7 @@ export async function POST(req: Request) {
           github: body.personalInfo.github,
           portfolio: body.personalInfo.portfolio,
           summary: body.summary,
-          skills: skills,  // Array directly
+          technicalSkillsJson,
           workJson: body.workExperience,
           educationJson: body.education,
         },
@@ -60,7 +73,7 @@ export async function POST(req: Request) {
           github: body.personalInfo.github,
           portfolio: body.personalInfo.portfolio,
           summary: body.summary,
-          skills: skills,
+          technicalSkillsJson,
           workJson: body.workExperience,
           educationJson: body.education,
         }
