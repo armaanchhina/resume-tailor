@@ -1,6 +1,7 @@
 import { LatexResumeData, TailoredResume } from "@/models/resume";
 import { Resume } from "@prisma/client";
 
+
 export function mapTailoredToLatex(resume: any, tailored: any) {
   const technicalSkills = (tailored?.skills?.technical ?? []).map((s: any) => ({
     category: escapeLatex(s.category ?? ""),
@@ -21,17 +22,17 @@ export function mapTailoredToLatex(resume: any, tailored: any) {
     education: resume.educationJson.map((e) => ({
       school: escapeLatex(e.school),
       degree: escapeLatex(e.degree),
-      location: escapeLatex("Victoria, BC"),
-      startDate: "Jan. 2021",
-      endDate: "April. 2025",
+      location: escapeLatex(e.location),
+      startDate: escapeLatex(formatMonthYear(e.startDate ?? "")),
+      endDate: escapeLatex(formatMonthYear(e.endDate ?? "")),
     })),
 
     workExperience: tailored.workExperience.map((w) => ({
       company: escapeLatex(w.company),
       position: escapeLatex(w.position),
       location: escapeLatex(w.location),
-      startDate: w.startDate,
-      endDate: w.endDate,
+      startDate: formatMonthYear(w.startDate),
+      endDate: formatMonthYear(w.endDate),
       responsibilities: w.responsibilities.map((r: any) => ({
         item: escapeLatex(r),
       })),
@@ -54,4 +55,17 @@ function escapeLatex(str: string) {
     .replace(/}/g, "\\}")
     .replace(/\^/g, "\\textasciicircum{}")
     .replace(/~/g, "\\textasciitilde{}");
+}
+
+function formatMonthYear(str: string): string {
+  if (!str) return ""
+
+  const [year, month] = str.split("-")
+  if (!year || !month) return str
+  const date = new Date()
+  date.setMonth(Number(month)-1)
+  const shortMonth = date.toLocaleString('default', {month: 'short'})
+  const longMonth = date.toLocaleString('default', {month: 'long'})
+  const stringMonth = shortMonth !== longMonth ? `${shortMonth}.` : shortMonth
+  return `${stringMonth} ${year}`
 }

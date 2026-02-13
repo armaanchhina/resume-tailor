@@ -12,7 +12,9 @@ export interface WorkExperience {
     school: string;
     degree?: string;
     major?: string;
-    graduationDate?: string;
+    location?: string;
+    startDate?: string;
+    endDate?: string;
     gpa?: string;
   }
   
@@ -128,7 +130,8 @@ export interface WorkExperience {
         school: "",
         degree: "",
         major: "",
-        graduationDate: "",
+        startDate: "",
+        endDate: "",
         gpa: "",
       },
     ],
