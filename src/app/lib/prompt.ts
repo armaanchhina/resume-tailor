@@ -39,15 +39,13 @@ Content rules:
    - Otherwise return empty summary
 
 5. Formatting:
-   - Each line must be ≤ 107 characters including spaces
-   - Avoid single-word wrapped lines
-   - Wrapped lines must contain ≥ 45 characters
    - Insert manual line breaks when needed
 
 6. Skills:
    - Include only relevant technical skills
    - Remove outdated or unrelated tools
    - Organize skills logically by category
+   
 
 Base Resume:
 ${JSON.stringify(resumeJson, null, 2)}

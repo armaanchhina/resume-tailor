@@ -7,50 +7,58 @@ import { Sparkles } from "lucide-react";
 import { TailoredResume } from "@/models/resume";
 import { useRouter } from "next/navigation";
 
+const MAX_REGENERATES = 3;
+
 export default function TailorePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [tailored, setTailored] = useState<any>(null);
   const [error, setError] = useState("");
+  const [regenerateCount, setRegenerateCount] = useState(0);
 
-  useEffect(() => {
+  const tailor = async () => {
+    if (regenerateCount >= MAX_REGENERATES) {
+      return;
+    }
     const job = localStorage.getItem("JOB_DESCRIPTION");
     if (!job) {
       setError("No job description found");
       setLoading(false);
       return;
     }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/tailor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ jobDescription: job }),
+      });
 
-    const tailor = async () => {
-      try {
-        const res = await fetch("/api/tailor", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ jobDescription: job }),
-        });
+      const data = await res.json();
 
-        const data = await res.json();
-
-        if (!res.ok) {
-          setError(data.error || "Something went wrong");
-        } else {
-          setTailored(data.tailored);
-        }
-        // setTailored(dummyData)
-      } catch (err) {
-        setError("Failed to tailor resume");
-      } finally {
-        setLoading(false);
+      if (!res.ok) {
+        setError(data.error || "Something went wrong");
+      } else {
+        setTailored(data.tailored);
+        setRegenerateCount((prev) => prev + 1);
       }
-    };
+      // setTailored(dummyData)
+    } catch (err) {
+      setError("Failed to tailor resume");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     tailor();
   }, []);
 
   const generatePDF = async (tailoredJson: TailoredResume) => {
     const res = await fetch("/api/pdf", {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(tailoredJson),
     });
 
@@ -61,6 +69,7 @@ export default function TailorePage() {
     a.href = url;
     a.download = "tailored_resume.pdf";
     a.click();
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -155,13 +164,13 @@ export default function TailorePage() {
             </div>
           </section>
 
-          <div className="flex gap-3 pt-6 border-t">
+          <div className="flex flex-wrap gap-3 pt-6 border-t">
             <button
               type="button"
               onClick={() => router.push("/")}
-              className="flex px-6 py-3 font-medium text-indigo-600 
-               border border-indigo-200 rounded-lg 
-               hover:bg-indigo-50 transition"
+              className="px-6 py-3 font-medium text-indigo-600 
+    border border-indigo-200 rounded-lg 
+    hover:bg-indigo-50 transition"
             >
               ← Back
             </button>
@@ -169,10 +178,27 @@ export default function TailorePage() {
             <button
               type="button"
               onClick={() => generatePDF(tailored)}
-              className="flex px-6 py-3 bg-indigo-600 text-white 
-               rounded-lg font-semibold hover:bg-indigo-700 transition"
+              className="px-6 py-3 bg-indigo-600 text-white 
+    rounded-lg font-semibold hover:bg-indigo-700 transition"
             >
               Download PDF
+            </button>
+
+            <button
+              type="button"
+              onClick={tailor}
+              disabled={loading || regenerateCount >= MAX_REGENERATES}
+              className="flex items-center gap-2 px-6 py-3 
+    bg-gradient-to-r from-purple-600 to-indigo-600 
+    text-white font-semibold rounded-lg shadow-md
+    hover:from-purple-700 hover:to-indigo-700
+    transition disabled:opacity-50"
+            >
+              {regenerateCount >= MAX_REGENERATES
+                ? "Limit reached"
+                : loading
+                ? "Regenerating..."
+                : "Regenerate Bullet Points"}
             </button>
           </div>
         </div>

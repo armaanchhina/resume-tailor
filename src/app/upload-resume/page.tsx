@@ -1,5 +1,5 @@
 "use client";
-import { use, useState } from "react";
+import { useState } from "react";
 import {
   Upload,
   FileText,
@@ -406,8 +406,7 @@ export default function UploadResumePage() {
               Cancel
             </button>
             <button
-              type="button"
-              onClick={handleSubmit(onSubmit)}
+              type="submit"
               disabled={isSaving}
               className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
             >
