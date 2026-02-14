@@ -10,16 +10,27 @@ export async function GET() {
     }
 
     const session = await prisma.session.findUnique({
-        where: { id: sessionToken},
-        include: { user: true }
-    })
+        where: { id: sessionToken },
+        select: {
+          expiresAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+          },
+        },
+      });
+      
 
     if ( !session || session.expiresAt < new Date()) {
         return NextResponse.json({user: null})
     }
 
-    const { passwordHash, ...safeUser } = session.user;
 
-    return NextResponse.json({ user: safeUser });
+    return NextResponse.json({ user: session.user });
 
 }

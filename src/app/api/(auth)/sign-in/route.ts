@@ -1,6 +1,5 @@
 import prisma from "@/app/lib/db";
 import bcrypt from "bcryptjs";
-import { error } from "console";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import crypto from "crypto";
