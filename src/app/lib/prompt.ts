@@ -60,8 +60,8 @@ You are an expert career writer.
 
 Write ONLY the BODY of a tailored cover letter.
 
-MIN 320 WORDS
-MAX 370 words
+MIN 350 WORDS
+MAX 420 words
 
 IMPORTANT:
 - Do NOT write a greeting
