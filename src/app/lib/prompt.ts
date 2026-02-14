@@ -48,7 +48,7 @@ Content rules:
    
 
 Base Resume:
-${JSON.stringify(resumeJson, null, 2)}
+${JSON.stringify(resumeJson)}
 
 Job Description:
 ${jobDescription}

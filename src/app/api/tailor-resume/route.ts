@@ -13,24 +13,50 @@ export async function POST(req: Request) {
 
   const userSession = await prisma.session.findUnique({
     where: { id: sessionToken },
-    include: { user: true },
+    select: {
+      id: true,
+      expiresAt: true,
+      userId: true,
+      user: {
+        select: {
+          resumes: {
+            take: 1, // your schema says Resume.userId is unique, so there will only be one anyway
+            select: {
+              id: true,
+              userId: true,
+              fullName: true,
+              email: true,
+              phone: true,
+              linkedin: true,
+              github: true,
+              portfolio: true,
+              summary: true,
+              workJson: true,
+              educationJson: true,
+              technicalSkillsJson: true,
+              updatedAt: true,
+            },
+          },
+        },
+      },
+    },
   });
 
   if (!userSession) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const resume = await prisma.resume.findUnique({
-    where: { userId: userSession.userId },
-  });
+  const resume = userSession.user.resumes[0];
+
 
   if (!resume) {
     return NextResponse.json({ error: "Resume not found" }, { status: 404 });
   }
 
-  console.log("Default Resume: ", resume)
+  const llmResume = buildLLMResume(resume);
 
-  const prompt = tailorResumePrompt(resume, jobDescription);
+
+  const prompt = tailorResumePrompt(llmResume, jobDescription);
 
   const completion = await client.responses.create({
     model: "gpt-5.1-chat-latest",
@@ -127,7 +153,7 @@ export async function POST(req: Request) {
   });
 
   const raw = completion.output_text;
-  console.log("RESULT: ", raw)
+  console.log("RESULT: ", raw);
   // const clean = raw
   // .replace(/```json/gi, "")
   // .replace(/```/g, "")
@@ -155,4 +181,31 @@ export async function POST(req: Request) {
   );
 
   return NextResponse.json({ tailored });
+}
+
+
+function buildLLMResume(resume: any) {
+  return {
+    name: resume.fullName,
+    contact: {
+      email: resume.email,
+      phone: resume.phone,
+      linkedin: resume.linkedin,
+      github: resume.github,
+      portfolio: resume.portfolio,
+    },
+
+    workExperience: resume.workJson?.map((job: any) => ({
+      company: job.company,
+      role: job.role ?? job.position,
+      start: job.startDate,
+      end: job.endDate,
+      highlights: job.responsibilities ?? job.bullets ?? [],
+      tech: job.techStack ?? job.technologies ?? [],
+    })) ?? [],
+
+    education: resume.educationJson ?? [],
+
+    skills: resume.technicalSkillsJson ?? [],
+  };
 }
