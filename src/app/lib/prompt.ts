@@ -55,61 +55,55 @@ ${jobDescription}
 `;
 
 
-export const dummyData = {
-  summary:
-    "Software developer with experience building backend services in Python, TypeScript, and cloud-native systems. Strong focus on clean design, readable code, and product-focused engineering. Skilled in debugging, performance optimization, and collaborating across product and infrastructure teams.",
-  workExperience: [
-    {
-      position: "Software Developer",
-      company: "Shift",
-      startDate: "May 2024",
-      endDate: "Dec 2024",
-      current: false,
-      responsibilities: [
-        "Built Python-based Django microservices supporting emissions tracking for 600,000+ active users.",
-        "Migrated workloads to AWS Lambda and Fargate to reduce operational overhead and improve reliability.",
-        "Designed and managed CI/CD pipelines that cut deployment times and reduced regressions.",
-        "Collaborated with analytics and product teams to simplify data integrations.",
-      ],
-    },
-    {
-      position: "Full-Stack Developer",
-      company: "Assembly",
-      startDate: "Sep 2023",
-      endDate: "Dec 2023",
-      current: false,
-      responsibilities: [
-        "Developed React components to enhance dashboard performance and usability.",
-        "Automated cross-platform revenue reporting using Python scripts and cloud functions.",
-        "Improved API integrations and reduced dashboard load times across key views.",
-      ],
-    },
-    {
-      position: "Backend Developer",
-      company: "Thrifty Foods",
-      startDate: "Jan 2023",
-      endDate: "Apr 2023",
-      current: false,
-      responsibilities: [
-        "Built a Flask + Azure MySQL application for fleet maintenance tracking.",
-        "Cut update time from 2–3 minutes to 30 seconds by migrating from manual spreadsheets.",
-        "Integrated mileage data via the Samsara API to automate reporting.",
-        "Helped facility managers monitor driver safety scores through a custom reporting system.",
-      ],
-    },
-  ],
-  skills: [
-    "Python",
-    "Django",
-    "TypeScript",
-    "React",
-    "Next.js",
-    "PostgreSQL",
-    "AWS Lambda",
-    "Docker",
-    "CI/CD Pipelines",
-    "APIs",
-    "System Design",
-    "Debugging",
-  ],
-};
+export const tailoreCoverLetterPrompt = (resumeJson: any, jobDescription: string) => `
+You are an expert career writer.
+
+Write ONLY the BODY of a tailored cover letter.
+
+MIN 320 WORDS
+MAX 370 words
+
+IMPORTANT:
+- Do NOT write a greeting
+- Do NOT write "Dear Hiring Team"
+- Do NOT write hello
+- Do NOT write a closing paragraph like "thank you for your time"
+- Do NOT write "Sincerely" or any sign off
+- Do NOT include the applicant name
+- Do NOT format like a letter
+
+You are writing ONLY the main content that goes between greeting and closing.
+
+WRITING STYLE RULES:
+- honest and human
+- no fluff
+- no corporate buzzwords
+- no dashes
+- simple clear sentences
+- confident but not arrogant
+- engineering resume style writing
+- focus on impact and results
+- sound like a real motivated candidate
+- natural storytelling when describing experience
+- 2 to 4 paragraphs total
+- 180 to 280 words
+
+CONTENT STRUCTURE:
+1. Strong opening showing interest in the role and value
+2. One or two paragraphs showing relevant experience from resume that matches job description
+3. Short forward looking statement about contribution or impact
+
+JOB DESCRIPTION:
+${jobDescription}
+
+RESUME DATA:
+${JSON.stringify(resumeJson, null, 2)}
+
+OUTPUT RULES:
+- Output ONLY the paragraphs
+- No greeting
+- No signature
+- No extra commentary
+- Plain text only
+`;
+
