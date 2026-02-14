@@ -18,9 +18,9 @@ export function mapTailoredToLatex(resume: any, tailored: any) {
 
     EMAIL: escapeLatex(resume.email),
 
-    LINKEDIN: escapeLatex(resume.linkedin),
-
-    GITHUB: escapeLatex(resume.github),
+    LINKEDIN: escapeLatex(stripProtocol(resume.linkedin)),
+    GITHUB: escapeLatex(stripProtocol(resume.github)),
+    
 
     education: educationSorted.map((e: any) => ({
       school: escapeLatex(e.school),
@@ -71,7 +71,6 @@ export function mapCoverLetterToLatex({
     PHONE: escapeLatex(resume.phone ?? ""),
     EMAIL_RAW: emailRaw,                 // raw if ever needed
     EMAIL_TEXT: escapeLatex(emailRaw),   // escaped for LaTeX
-    LINKEDIN: resume.linkedin?.trim() || "",
     DATE: escapeLatex(
       new Date().toLocaleDateString("en-CA", {
         year: "numeric",
@@ -150,4 +149,12 @@ function sortMostRecentFirst<T extends { startDate?: YM; endDate?: YM; current?:
 
     return ymToNumber(b.startDate) - ymToNumber(a.startDate)
   })
+}
+
+function stripProtocol(url?: string) {
+  if (!url) return "";
+  return url
+    .replace(/^https?:\/\//, "")  // remove http:// or https://
+    .replace(/^www\./, "")        // remove www.
+    .replace(/\/$/, "");          // optional: remove trailing slash
 }
