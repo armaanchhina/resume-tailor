@@ -45,23 +45,72 @@ export function mapTailoredToLatex(resume: any, tailored: any) {
   };
 }
 
-function escapeLatex(str: string) {
-  if (!str) return "";
+type CoverLetterViewParams = {
+  resume: {
+    fullName?: string | null
+    phone?: string | null
+    email?: string | null
+    linkedin?: string | null
+  }
+  coverLetter: string
+  location?: string
+  recipient?: string
+}
 
-  // Remove zero-width / word-joiner characters that break pdflatex
-  const cleaned = str.replace(/[\u200B-\u200D\u2060\uFEFF]/g, "");
+export function mapCoverLetterToLatex({
+  resume,
+  coverLetter,
+  location = "Victoria, BC",
+  recipient = "Hiring Team",
+}: CoverLetterViewParams) {
+  const emailRaw = (resume.email ?? "").trim()
 
-  return cleaned
+  return {
+    FULL_NAME: escapeLatex(resume.fullName ?? ""),
+    LOCATION: escapeLatex(location),
+    PHONE: escapeLatex(resume.phone ?? ""),
+    EMAIL_RAW: emailRaw,                 // raw if ever needed
+    EMAIL_TEXT: escapeLatex(emailRaw),   // escaped for LaTeX
+    LINKEDIN: resume.linkedin?.trim() || "",
+    DATE: escapeLatex(
+      new Date().toLocaleDateString("en-CA", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    ),
+    RECIPIENT: escapeLatex(recipient),
+    BODY: textToLatexParagraphs(coverLetter),
+  }
+}
+
+
+export function textToLatexParagraphs(text: string) {
+  // Split into paragraphs by blank lines
+  const paras = text
+    .trim()
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  // Inside a paragraph, keep single line breaks as LaTeX line breaks
+  return paras.map((p) => escapeLatex(p).replace(/\n/g, "\\\\\n")).join("\n\n");
+}
+
+function escapeLatex(input: string) {
+  if (!input) return ""
+  return input
     .replace(/\\/g, "\\textbackslash{}")
-    .replace(/&/g, "\\&")
     .replace(/%/g, "\\%")
-    .replace(/\$/g, "\\$")
+    .replace(/&/g, "\\&")
     .replace(/#/g, "\\#")
     .replace(/_/g, "\\_")
     .replace(/{/g, "\\{")
     .replace(/}/g, "\\}")
-    .replace(/\^/g, "\\textasciicircum{}")
-    .replace(/~/g, "\\textasciitilde{}");
+    .replace(/\$/g, "\\$")
+    .replace(/\^/g, "\\^{}")
+    .replace(/~/g, "\\~{}")
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "");
 }
 
 
