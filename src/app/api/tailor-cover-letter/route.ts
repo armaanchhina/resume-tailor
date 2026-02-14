@@ -7,28 +7,52 @@ import OpenAI from "openai";
 const client = new OpenAI({ apiKey: process.env.OPENAI_KEY });
 
 export async function POST(req: Request) {
-  const { jobDescription } = await req.json();
+  let body: any = {};
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const jobDescription = body?.jobDescription;
+  const tailoredResume = body?.tailoredResume;
+
+  if (typeof jobDescription !== "string" || !jobDescription.trim()) {
+    return NextResponse.json(
+      { error: "jobDescription is required" },
+      { status: 400 }
+    );
+  }
+
   const session = await cookies();
   const sessionToken = session.get("session")?.value;
 
   const userSession = await prisma.session.findUnique({
     where: { id: sessionToken },
-    include: { user: true },
   });
 
   if (!userSession) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const resume = await prisma.resume.findUnique({
-    where: { userId: userSession.userId },
-  });
+  let resumeForPrompt;
 
-  if (!resume) {
-    return NextResponse.json({ error: "Resume not found" }, { status: 404 });
+  if (tailoredResume && typeof tailoredResume === "object") {
+    resumeForPrompt = tailoredResume;
+  }
+  else {
+    const dbResume = await prisma.resume.findUnique({
+      where: { userId: userSession.userId },
+    });
+
+    if (!dbResume) {
+      return NextResponse.json({ error: "Resume not found" }, { status: 404 });
+    }
+
+    resumeForPrompt = dbResume;
   }
 
-  const prompt = tailoreCoverLetterPrompt(resume, jobDescription);
+  const prompt = tailoreCoverLetterPrompt(resumeForPrompt, jobDescription);
   const completion = await client.responses.create({
     model: "gpt-5.1-chat-latest",
     input: prompt,
