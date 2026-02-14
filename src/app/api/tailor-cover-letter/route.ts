@@ -4,7 +4,13 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_KEY });
+function getOpenAIClient() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("Missing OPENAI_API_KEY");
+  }
+  return new OpenAI({ apiKey });
+}
 
 export async function POST(req: Request) {
   let body: any = {};
@@ -39,8 +45,7 @@ export async function POST(req: Request) {
 
   if (tailoredResume && typeof tailoredResume === "object") {
     resumeForPrompt = tailoredResume;
-  }
-  else {
+  } else {
     const dbResume = await prisma.resume.findUnique({
       where: { userId: userSession.userId },
     });
@@ -53,6 +58,8 @@ export async function POST(req: Request) {
   }
 
   const prompt = tailoreCoverLetterPrompt(resumeForPrompt, jobDescription);
+  const client = getOpenAIClient();
+
   const completion = await client.responses.create({
     model: "gpt-5.1-chat-latest",
     input: prompt,

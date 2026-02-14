@@ -4,7 +4,13 @@ import { tailorResumePrompt } from "@/app/lib/prompt";
 import prisma from "@/app/lib/db";
 import { cookies } from "next/headers";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_KEY });
+function getOpenAIClient() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("Missing OPENAI_API_KEY");
+  }
+  return new OpenAI({ apiKey });
+}
 
 export async function POST(req: Request) {
   const { jobDescription } = await req.json();
@@ -48,15 +54,15 @@ export async function POST(req: Request) {
 
   const resume = userSession.user.resumes[0];
 
-
   if (!resume) {
     return NextResponse.json({ error: "Resume not found" }, { status: 404 });
   }
 
   const llmResume = buildLLMResume(resume);
 
-
   const prompt = tailorResumePrompt(llmResume, jobDescription);
+  
+  const client = getOpenAIClient();
 
   const completion = await client.responses.create({
     model: "gpt-5.1-chat-latest",
@@ -183,7 +189,6 @@ export async function POST(req: Request) {
   return NextResponse.json({ tailored });
 }
 
-
 function buildLLMResume(resume: any) {
   return {
     name: resume.fullName,
@@ -195,14 +200,15 @@ function buildLLMResume(resume: any) {
       portfolio: resume.portfolio,
     },
 
-    workExperience: resume.workJson?.map((job: any) => ({
-      company: job.company,
-      role: job.role ?? job.position,
-      start: job.startDate,
-      end: job.endDate,
-      highlights: job.responsibilities ?? job.bullets ?? [],
-      tech: job.techStack ?? job.technologies ?? [],
-    })) ?? [],
+    workExperience:
+      resume.workJson?.map((job: any) => ({
+        company: job.company,
+        role: job.role ?? job.position,
+        start: job.startDate,
+        end: job.endDate,
+        highlights: job.responsibilities ?? job.bullets ?? [],
+        tech: job.techStack ?? job.technologies ?? [],
+      })) ?? [],
 
     education: resume.educationJson ?? [],
 
