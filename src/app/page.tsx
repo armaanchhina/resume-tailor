@@ -1,51 +1,49 @@
-"use client"
-import { useRouter } from 'next/navigation';
-import { FileText, Upload, Sparkles, Briefcase, Edit2 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
-import { Header } from './components/Header';
-import { Footer } from './components/Footer';
-import { useAuth } from './lib/useAuth';
+"use client";
+import { useRouter } from "next/navigation";
+import { FileText, Upload, Sparkles, Briefcase, Edit2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Header } from "./components/Header";
+import { Footer } from "./components/Footer";
+import { useAuth } from "./lib/useAuth";
 
 export default function Home() {
   const router = useRouter();
-  const {currentUser, authLoading} = useAuth()
+  const [mode, setMode] = useState<"resume" | "cover">("resume");
+
+  const { currentUser, authLoading } = useAuth();
   const [hasResume, setHasResume] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [ jobDescription, setJobDescription] = useState("")
- 
-
-  
+  const [jobDescription, setJobDescription] = useState("");
 
   const checkForResume = useCallback(async () => {
     setIsLoading(true);
 
-    if (!currentUser){
-      setIsLoading(false)
-      return
+    if (!currentUser) {
+      setIsLoading(false);
+      return;
     }
 
     try {
       const res = await fetch("/api/resume", {
         method: "GET",
-        credentials: "include"
+        credentials: "include",
       });
-  
+
       const json = await res.json();
-  
+
       if (!json.ok) {
         console.log("No resume yet.");
         setHasResume(false);
         return;
       }
-  
+
       setHasResume(json.hasResume);
-  
     } catch (err) {
       console.error("Error fetching resume:", err);
       setHasResume(false);
     } finally {
-      setIsLoading(false); 
-    }  
+      setIsLoading(false);
+    }
   }, [currentUser]);
 
   useEffect(() => {
@@ -57,9 +55,14 @@ export default function Home() {
     router.push(currentUser ? "/upload-resume" : "/sign-in");
   };
 
-  const handleTailorResume = () => {
-    localStorage.setItem("JOB_DESCRIPTION", jobDescription)
-    router.push('/tailor');
+  const handleGenerate = () => {
+    localStorage.setItem("JOB_DESCRIPTION", jobDescription);
+
+    if (mode === "resume") {
+      router.push("/tailor-resume");
+    } else {
+      router.push("/tailor-cover-letter");
+    }
   };
 
   if (isLoading) {
@@ -76,20 +79,27 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
-      <Header/>
+      <Header />
 
       {/* Main Content */}
       <main className="max-w-5xl mx-auto px-6 py-16">
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h2 className="text-5xl font-bold text-gray-900 mb-4">
-            Tailor Your Resume with AI
+            {mode == "resume"
+              ? "Tailor Your Resume with AI"
+              : "Tailor Your Cover Letter with AI"}
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            {hasResume 
-              ? "Your resume is ready. Paste a job description to tailor it instantly."
-              : "Upload your resume once, then customize it for every job application using AI-powered optimization."
-            }
+          <p
+            key={mode}
+            className="text-xl text-gray-600 max-w-2xl mx-auto
+             transition-opacity duration-200"
+          >
+            {hasResume
+              ? mode === "resume"
+                ? "Your resume is ready. Paste a job description to tailor it instantly."
+                : "Your resume is ready. Paste a job description to generate a tailored cover letter."
+              : "Upload your resume once, then customize it for every job application using AI-powered optimization."}
           </p>
         </div>
 
@@ -104,7 +114,8 @@ export default function Home() {
                 Get Started
               </h3>
               <p className="text-gray-600 mb-8">
-                First, upload your master resume. Then you can tailor it to any job description in seconds.
+                First, upload your master resume. Then you can tailor it to any
+                job description in seconds.
               </p>
               <button
                 onClick={handleUploadResume}
@@ -125,11 +136,47 @@ export default function Home() {
                 <Sparkles className="w-10 h-10 text-green-600" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3 text-center">
-                Tailor Your Resume
+                {mode === "resume"
+                  ? "Tailor Your Resume"
+                  : "Generate Cover Letter"}
               </h3>
               <p className="text-gray-600 mb-6 text-center">
-                Paste a job description below and we'll optimize your resume for that position.
+                {mode === "resume"
+                  ? "Paste a job description and we will optimize your resume."
+                  : "Paste a job description and we will write a tailored cover letter."}
               </p>
+
+              <p className="text-sm text-gray-500 text-center mb-2">
+                What do you want to create?
+              </p>
+
+              <div className="flex justify-center mb-6">
+                <div className="inline-flex bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setMode("resume")}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+                      mode === "resume"
+                        ? "bg-white shadow text-gray-900"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    <FileText className="w-4 h-4 inline mr-1" />
+                    Tailor Resume
+                  </button>
+
+                  <button
+                    onClick={() => setMode("cover")}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+                      mode === "cover"
+                        ? "bg-white shadow text-gray-900"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    <Sparkles className="w-4 h-4 inline mr-1" />
+                    Generate Cover Letter
+                  </button>
+                </div>
+              </div>
 
               <textarea
                 value={jobDescription}
@@ -148,11 +195,13 @@ export default function Home() {
                 </button>
                 <button
                   disabled={!jobDescription.trim()}
-                  onClick={handleTailorResume}
+                  onClick={handleGenerate}
                   className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-lg flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
-                  Tailor Resume
+                  {mode === "resume"
+                    ? "Tailor Resume"
+                    : "Generate Cover Letter"}
                 </button>
               </div>
             </div>
@@ -214,7 +263,9 @@ export default function Home() {
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
               <span className="text-2xl">📄</span>
             </div>
-            <h4 className="font-semibold text-gray-900 mb-2">Professional PDF</h4>
+            <h4 className="font-semibold text-gray-900 mb-2">
+              Professional PDF
+            </h4>
             <p className="text-sm text-gray-600">
               Download beautifully formatted resumes in LaTeX style
             </p>
@@ -222,7 +273,7 @@ export default function Home() {
         </div>
       </main>
 
-      <Footer/>
+      <Footer />
     </div>
   );
 }
