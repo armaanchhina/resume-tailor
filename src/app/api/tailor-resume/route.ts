@@ -4,7 +4,6 @@ import { tailorResumePrompt } from "@/app/lib/prompt";
 import prisma from "@/app/lib/db";
 import { cookies } from "next/headers";
 
-console.log("API KEY: ", process.env.OPENAI_KEY);
 const client = new OpenAI({ apiKey: process.env.OPENAI_KEY });
 
 export async function POST(req: Request) {
@@ -28,6 +27,8 @@ export async function POST(req: Request) {
   if (!resume) {
     return NextResponse.json({ error: "Resume not found" }, { status: 404 });
   }
+
+  console.log("Default Resume: ", resume)
 
   const prompt = tailorResumePrompt(resume, jobDescription);
 

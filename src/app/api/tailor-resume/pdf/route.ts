@@ -35,9 +35,7 @@ export async function POST(req: Request){
         }
 
         const data = await req.json();
-        // console.log("data", data.workExperience)
         const latexData = mapTailoredToLatex(resume, data)
-        console.log("LATEX DATA", latexData)
         const template = await readFile(process.cwd() + "/src/app/lib/resume.tex", "utf8");
         Mustache.escape = (text) => text;
         const filled = Mustache.render(template, latexData)

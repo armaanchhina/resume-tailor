@@ -28,7 +28,7 @@ export default function TailorePage() {
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/tailor", {
+      const res = await fetch("/api/tailor-resume", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -56,7 +56,7 @@ export default function TailorePage() {
   }, []);
 
   const generatePDF = async (tailoredJson: TailoredResume) => {
-    const res = await fetch("/api/pdf", {
+    const res = await fetch("/api/tailor-resume/pdf", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(tailoredJson),
