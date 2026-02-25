@@ -1,5 +1,5 @@
 import prisma from "@/app/lib/db";
-import { tailoreCoverLetterPrompt } from "@/app/lib/prompt";
+import { tailorCoverLetterPrompt } from "@/app/lib/prompt";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     resumeForPrompt = dbResume;
   }
 
-  const prompt = tailoreCoverLetterPrompt(resumeForPrompt, jobDescription);
+  const prompt = tailorCoverLetterPrompt(resumeForPrompt, jobDescription);
   const client = getOpenAIClient();
 
   const completion = await client.responses.create({

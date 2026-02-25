@@ -77,7 +77,10 @@ export async function POST(req: Request) {
           additionalProperties: false,
           properties: {
             summary: { type: "string" },
-
+            targetCompany: {
+              type: ["string", "null"],
+              description: "Company name extracted from the job description. Null if not found."
+            },
             workExperience: {
               type: "array",
               items: {
@@ -152,7 +155,7 @@ export async function POST(req: Request) {
               required: ["technical"],
             },
           },
-          required: ["summary", "workExperience", "education", "skills"],
+          required: ["summary", "targetCompany", "workExperience", "education", "skills"],
         },
       },
     },
@@ -204,6 +207,7 @@ function buildLLMResume(resume: any) {
       resume.workJson?.map((job: any) => ({
         company: job.company,
         role: job.role ?? job.position,
+        location: job.location,
         start: job.startDate,
         end: job.endDate,
         highlights: job.responsibilities ?? job.bullets ?? [],

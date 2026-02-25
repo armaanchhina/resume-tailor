@@ -33,6 +33,9 @@ Content rules:
 3. Bullet limit:
    - Maximum 3–4 bullet points per role
    - Keep only the most impactful and relevant work
+   - Prefer relevance and impact over completeness.
+   - Keep roles that demonstrate transferable technical value, even if indirect.
+
 
 4. Summary:
    - Generate only if base resume contains one
@@ -46,6 +49,8 @@ Content rules:
    - Remove outdated or unrelated tools
    - Organize skills logically by category
    
+Extract the target company name from the job description.
+If the company name is not explicitly stated, return null.
 
 Base Resume:
 ${JSON.stringify(resumeJson)}
@@ -55,13 +60,13 @@ ${jobDescription}
 `;
 
 
-export const tailoreCoverLetterPrompt = (resumeJson: any, jobDescription: string) => `
+export const tailorCoverLetterPrompt = (resumeJson: any, jobDescription: string) => `
 You are an expert career writer.
 
 Write ONLY the BODY of a tailored cover letter.
 
-MIN 350 WORDS
-MAX 420 words
+HARD REQUIREMENT:
+- Total length must be between 350 and 420 words (inclusive).
 
 IMPORTANT:
 - Do NOT write a greeting
@@ -71,6 +76,7 @@ IMPORTANT:
 - Do NOT write "Sincerely" or any sign off
 - Do NOT include the applicant name
 - Do NOT format like a letter
+- Plain text only
 
 You are writing ONLY the main content that goes between greeting and closing.
 
@@ -85,13 +91,12 @@ WRITING STYLE RULES:
 - focus on impact and results
 - sound like a real motivated candidate
 - natural storytelling when describing experience
-- 2 to 4 paragraphs total
-- 180 to 280 words
 
-CONTENT STRUCTURE:
-1. Strong opening showing interest in the role and value
-2. One or two paragraphs showing relevant experience from resume that matches job description
-3. Short forward looking statement about contribution or impact
+STRUCTURE:
+- 2 to 4 paragraphs total
+- Opening: interest in the role + your value
+- Middle: 1 to 2 paragraphs mapping resume experience to the job
+- Ending: short forward-looking statement about what you will deliver
 
 JOB DESCRIPTION:
 ${jobDescription}
@@ -104,6 +109,7 @@ OUTPUT RULES:
 - No greeting
 - No signature
 - No extra commentary
-- Plain text only
+- Must be 350 to 420 words
 `;
+
 

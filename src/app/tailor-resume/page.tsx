@@ -11,6 +11,13 @@ const MAX_REGENERATES = 3;
 
 type Tab = "resume" | "cover";
 
+const safeFilename = (name: string) =>
+  name
+    .trim()
+    .replace(/[\/\\?%*:|"<>]/g, "") // remove illegal filename chars
+    .replace(/\s+/g, "_") // spaces -> underscores
+    .slice(0, 60); // avoid crazy long names
+
 export default function TailorePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -20,7 +27,7 @@ export default function TailorePage() {
   const [coverLetterLoading, setCoverLetterLoading] = useState(false);
   const [coverLetterError, setCoverLetterError] = useState("");
   const [tab, setTab] = useState<Tab>("resume");
-
+  const [targetCompany, setTargetCompany] = useState<string | null>(null);
   const [regenerateCount, setRegenerateCount] = useState(0);
 
   const tailor = async () => {
@@ -48,6 +55,7 @@ export default function TailorePage() {
         setError(data.error || "Something went wrong");
       } else {
         setTailored(data.tailored);
+        setTargetCompany(data.tailored?.targetCompany ?? null);
         setRegenerateCount((prev) => prev + 1);
       }
       // setTailored(dummyData)
@@ -140,9 +148,13 @@ export default function TailorePage() {
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
 
+    const base = targetCompany
+      ? `${safeFilename(targetCompany)}`
+      : "tailored_resume";
+
     const a = document.createElement("a");
     a.href = url;
-    a.download = "tailored_resume.pdf";
+    a.download = `${base}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -172,11 +184,21 @@ export default function TailorePage() {
 
       <main className="max-w-3xl mx-auto px-6 py-12">
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-12">
-          <div className="flex items-center gap-2 mb-6">
-            <Sparkles className="w-6 h-6 text-indigo-600" />
-            <h2 className="text-2xl font-bold text-gray-900">
-              Tailored Resume
-            </h2>
+          <div className="flex items-start justify-between gap-3 mb-6">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-indigo-600" />
+              <h2 className="text-2xl font-bold text-gray-900">
+                Tailored Resume
+              </h2>
+            </div>
+
+            {tailored?.targetCompany && (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-sm font-semibold text-indigo-700 ring-1 ring-indigo-200">
+                  {targetCompany}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2 mb-6">
