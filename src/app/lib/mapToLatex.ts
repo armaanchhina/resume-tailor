@@ -1,7 +1,3 @@
-import { LatexResumeData, TailoredResume } from "@/models/resume";
-import { Resume } from "@prisma/client";
-
-
 export function mapTailoredToLatex(resume: any, tailored: any) {
   const technicalSkills = (tailored?.skills?.technical ?? []).map((s: any) => ({
     category: escapeLatex(s.category ?? ""),
