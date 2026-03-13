@@ -126,10 +126,10 @@ export default function TailorePage() {
 
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
-
+    const base = targetCompany ? safeFilename(targetCompany) : "cover_letter";
     const a = document.createElement("a");
     a.href = url;
-    a.download = "cover_letter.pdf";
+    a.download = `${base}_cover_letter.pdf`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -154,7 +154,7 @@ export default function TailorePage() {
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${base}.pdf`;
+    a.download = `${base}_resume.pdf`;
     a.click();
     URL.revokeObjectURL(url);
   };
