@@ -41,7 +41,7 @@ export async function POST(req: Request){
         const store = await cookies()
         store.set("session", sessionToken, {
             httpOnly: true,
-            secure: true,
+            secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
             maxAge: 60 * 60 * 24 * 7,
             path: "/"
