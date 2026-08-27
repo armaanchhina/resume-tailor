@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { FileText, Upload, Sparkles, Briefcase, Edit2 } from "lucide-react";
+import { FileText, Upload, Sparkles, Edit2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
@@ -8,7 +8,6 @@ import { useAuth } from "./lib/useAuth";
 
 export default function Home() {
   const router = useRouter();
-  const [mode, setMode] = useState<"resume" | "cover">("resume");
 
   const { currentUser, authLoading } = useAuth();
   const [hasResume, setHasResume] = useState(false);
@@ -30,14 +29,7 @@ export default function Home() {
       });
 
       const json = await res.json();
-
-      if (!json.ok) {
-        console.log("No resume yet.");
-        setHasResume(false);
-        return;
-      }
-
-      setHasResume(json.hasResume);
+      setHasResume(json.ok ? json.hasResume : false);
     } catch (err) {
       console.error("Error fetching resume:", err);
       setHasResume(false);
@@ -57,12 +49,7 @@ export default function Home() {
 
   const handleGenerate = () => {
     localStorage.setItem("JOB_DESCRIPTION", jobDescription);
-
-    if (mode === "resume") {
-      router.push("/tailor-resume");
-    } else {
-      router.push("/tailor-cover-letter");
-    }
+    router.push("/tailor-resume");
   };
 
   if (isLoading) {
@@ -78,32 +65,20 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
       <Header />
 
-      {/* Main Content */}
       <main className="max-w-5xl mx-auto px-6 py-16">
-        {/* Hero Section */}
         <div className="text-center mb-12">
           <h2 className="text-5xl font-bold text-gray-900 mb-4">
-            {mode == "resume"
-              ? "Tailor Your Resume with AI"
-              : "Tailor Your Cover Letter with AI"}
+            Tailor Your Resume with AI
           </h2>
-          <p
-            key={mode}
-            className="text-xl text-gray-600 max-w-2xl mx-auto
-             transition-opacity duration-200"
-          >
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             {hasResume
-              ? mode === "resume"
-                ? "Your resume is ready. Paste a job description to tailor it instantly."
-                : "Your resume is ready. Paste a job description to generate a tailored cover letter."
+              ? "Your resume is ready. Paste a job description to tailor it — and generate a matching cover letter — instantly."
               : "Upload your resume once, then customize it for every job application using AI-powered optimization."}
           </p>
         </div>
 
-        {/* NO RESUME - Get Started */}
         {!hasResume && (
           <div className="max-w-3xl mx-auto">
             <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
@@ -127,56 +102,19 @@ export default function Home() {
           </div>
         )}
 
-        {/* HAS RESUME - Tailor Section */}
         {hasResume && (
           <div className="max-w-3xl mx-auto">
-            {/* Tailor Resume Card */}
             <div className="bg-white rounded-2xl shadow-xl p-12">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Sparkles className="w-10 h-10 text-green-600" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3 text-center">
-                {mode === "resume"
-                  ? "Tailor Your Resume"
-                  : "Generate Cover Letter"}
+                Tailor Your Resume
               </h3>
               <p className="text-gray-600 mb-6 text-center">
-                {mode === "resume"
-                  ? "Paste a job description and we will optimize your resume."
-                  : "Paste a job description and we will write a tailored cover letter."}
+                Paste the job description below. You'll be able to review the
+                tailored resume and generate a matching cover letter next.
               </p>
-
-              <p className="text-sm text-gray-500 text-center mb-2">
-                What do you want to create?
-              </p>
-
-              <div className="flex justify-center mb-6">
-                <div className="inline-flex bg-gray-100 rounded-lg p-1">
-                  <button
-                    onClick={() => setMode("resume")}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-                      mode === "resume"
-                        ? "bg-white shadow text-gray-900"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    <FileText className="w-4 h-4 inline mr-1" />
-                    Tailor Resume
-                  </button>
-
-                  <button
-                    onClick={() => setMode("cover")}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-                      mode === "cover"
-                        ? "bg-white shadow text-gray-900"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    <Sparkles className="w-4 h-4 inline mr-1" />
-                    Generate Cover Letter
-                  </button>
-                </div>
-              </div>
 
               <textarea
                 value={jobDescription}
@@ -196,50 +134,16 @@ export default function Home() {
                 <button
                   disabled={!jobDescription.trim()}
                   onClick={handleGenerate}
-                  className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-lg flex items-center justify-center gap-2"
+                  className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
-                  {mode === "resume"
-                    ? "Tailor Resume"
-                    : "Generate Cover Letter"}
+                  Tailor Resume
                 </button>
               </div>
             </div>
-
-            {/* Recent Tailored Resumes */}
-            {/* <div className="mt-8 bg-white rounded-xl shadow-sm p-6">
-              <h4 className="font-semibold text-gray-900 mb-4">Recent Tailored Resumes</h4>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <Briefcase className="w-5 h-5 text-indigo-600" />
-                    <div>
-                      <p className="font-medium text-gray-900">Senior Software Engineer</p>
-                      <p className="text-sm text-gray-500">Google • 2 days ago</p>
-                    </div>
-                  </div>
-                  <button className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-                    Download
-                  </button>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <Briefcase className="w-5 h-5 text-indigo-600" />
-                    <div>
-                      <p className="font-medium text-gray-900">Full Stack Developer</p>
-                      <p className="text-sm text-gray-500">Microsoft • 5 days ago</p>
-                    </div>
-                  </div>
-                  <button className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-                    Download
-                  </button>
-                </div>
-              </div>
-            </div> */}
           </div>
         )}
 
-        {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 max-w-3xl mx-auto">
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
