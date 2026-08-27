@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
-import { cookies } from "next/headers";
+import { getSession } from "@/app/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -40,24 +40,11 @@ function toTechnicalSkillsJson(raw: any) {
 
 export async function POST(req: Request) {
     try {
-      const store = await cookies()
-      const sessionToken = store.get("session")?.value
-
-      if (!sessionToken) {
+      const session = await getSession();
+      if (!session) {
         return NextResponse.json(
-          {ok: false, error: "Not authenticated"},
-          {status: 401}
-        )
-      }
-
-      const session = await prisma.session.findUnique({
-        where: { id: sessionToken}
-      })
-
-      if ( !session ) {
-        return NextResponse.json(
-          { okay: false, error: "Invalid Session"},
-          {status: 401}
+          { ok: false, error: "Not authenticated" },
+          { status: 401 }
         )
       }
 
@@ -109,24 +96,11 @@ export async function POST(req: Request) {
 
 export async function GET() {
   try{
-    const store = await cookies()
-    const sessionToken = store.get("session")?.value
-
-    if (!sessionToken) {
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json(
-        {ok: false, error: "Not authenticated"},
-        {status: 401}
-      )
-    }
-
-    const session = await prisma.session.findUnique({
-      where: { id: sessionToken}
-    })
-
-    if ( !session ) {
-      return NextResponse.json(
-        { okay: false, error: "Invalid Session"},
-        {status: 401}
+        { ok: false, error: "Not authenticated" },
+        { status: 401 }
       )
     }
 

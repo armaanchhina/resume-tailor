@@ -1,36 +1,23 @@
 import prisma from "@/app/lib/db";
-import { cookies } from "next/headers";
+import { getSession } from "@/app/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-    const store = await cookies()
-    const sessionToken = store.get("session")?.value
-    if (!sessionToken) {
-        return NextResponse.json({user: null})
+    const session = await getSession();
+    if (!session) {
+        return NextResponse.json({ user: null })
     }
 
-    const session = await prisma.session.findUnique({
-        where: { id: sessionToken },
+    const user = await prisma.user.findUnique({
+        where: { id: session.userId },
         select: {
-          expiresAt: true,
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              createdAt: true,
-              updatedAt: true,
-            },
-          },
+            id: true,
+            name: true,
+            email: true,
+            createdAt: true,
+            updatedAt: true,
         },
-      });
-      
+    });
 
-    if ( !session || session.expiresAt < new Date()) {
-        return NextResponse.json({user: null})
-    }
-
-
-    return NextResponse.json({ user: session.user });
-
+    return NextResponse.json({ user });
 }

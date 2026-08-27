@@ -3,8 +3,8 @@ import Mustache from "mustache";
 import { promisify } from "util";
 import { exec } from "child_process";
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import prisma from "@/app/lib/db";
+import { getSession } from "@/app/lib/auth";
 import { mapCoverLetterToLatex } from "@/app/lib/mapToLatex";
 
 const execAsync = promisify(exec);
@@ -69,20 +69,13 @@ Sincerely,\\\\
 
 export async function POST(req: Request) {
   try {
-    const session = await cookies();
-    const sessionToken = session.get("session")?.value;
-
-    const userSession = await prisma.session.findUnique({
-      where: { id: sessionToken },
-      include: { user: true },
-    });
-
-    if (!userSession) {
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const resume = await prisma.resume.findUnique({
-      where: { userId: userSession.userId },
+      where: { userId: session.userId },
     });
 
     if (!resume) {

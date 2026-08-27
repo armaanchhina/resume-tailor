@@ -1,16 +1,9 @@
 import prisma from "@/app/lib/db";
+import { getSession } from "@/app/lib/auth";
+import { getOpenAIClient } from "@/app/lib/openai";
+import { buildLLMResume } from "@/app/lib/buildLLMResume";
 import { tailorCoverLetterPrompt } from "@/app/lib/prompt";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
-
-function getOpenAIClient() {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error("Missing OPENAI_API_KEY");
-  }
-  return new OpenAI({ apiKey });
-}
 
 export async function POST(req: Request) {
   let body: any = {};
@@ -30,31 +23,23 @@ export async function POST(req: Request) {
     );
   }
 
-  const session = await cookies();
-  const sessionToken = session.get("session")?.value;
-
-  const userSession = await prisma.session.findUnique({
-    where: { id: sessionToken },
-  });
-
-  if (!userSession) {
+  const session = await getSession();
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let resumeForPrompt;
+  let resumeForPrompt = tailoredResume && typeof tailoredResume === "object" ? tailoredResume : null;
 
-  if (tailoredResume && typeof tailoredResume === "object") {
-    resumeForPrompt = tailoredResume;
-  } else {
+  if (!resumeForPrompt) {
     const dbResume = await prisma.resume.findUnique({
-      where: { userId: userSession.userId },
+      where: { userId: session.userId },
     });
 
     if (!dbResume) {
       return NextResponse.json({ error: "Resume not found" }, { status: 404 });
     }
 
-    resumeForPrompt = dbResume;
+    resumeForPrompt = buildLLMResume(dbResume);
   }
 
   const prompt = tailorCoverLetterPrompt(resumeForPrompt, jobDescription);

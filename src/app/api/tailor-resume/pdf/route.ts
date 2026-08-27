@@ -2,34 +2,24 @@ import { readFile, writeFile } from "fs/promises";
 import Mustache from "mustache";
 import { exec } from "child_process";
 import { promisify } from "util";
-import { read } from "fs";
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import prisma from "@/app/lib/db";
+import { getSession } from "@/app/lib/auth";
 import { mapTailoredToLatex } from "@/app/lib/mapToLatex";
 
 const execAsync = promisify(exec);
 
-
-
 export async function POST(req: Request){
     try {
-        const session = await cookies()
-        const sessionToken = session.get("session")?.value
-      
-        const userSession = await prisma.session.findUnique({
-          where: {id: sessionToken},
-          include: { user: true}
-        })
-      
-        if ( !userSession ){
+        const session = await getSession();
+        if (!session) {
           return NextResponse.json({error: "Unauthorized"}, {status: 401})
         }
-      
+
         const resume = await prisma.resume.findUnique({
-          where: {userId: userSession.userId}
+          where: {userId: session.userId}
         })
-      
+
         if ( !resume ){
           return NextResponse.json({error: "Resume not found"}, { status: 404})
         }
@@ -56,7 +46,7 @@ export async function POST(req: Request){
               "Content-Disposition": 'attachment; filename="resume.pdf"'
             }
           });
-          
+
 
     } catch (err) {
         console.error("PDF generation error", err)

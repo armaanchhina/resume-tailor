@@ -1,68 +1,24 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 import { tailorResumePrompt } from "@/app/lib/prompt";
+import { getSession } from "@/app/lib/auth";
+import { getOpenAIClient } from "@/app/lib/openai";
+import { buildLLMResume } from "@/app/lib/buildLLMResume";
 import prisma from "@/app/lib/db";
-import { cookies } from "next/headers";
-
-function getOpenAIClient() {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error("Missing OPENAI_API_KEY");
-  }
-  return new OpenAI({ apiKey });
-}
 
 export async function POST(req: Request) {
   const { jobDescription } = await req.json();
-  const session = await cookies();
-  const sessionToken = session.get("session")?.value;
 
-  const userSession = await prisma.session.findUnique({
-    where: { id: sessionToken },
-    select: {
-      id: true,
-      expiresAt: true,
-      userId: true,
-      user: {
-        select: {
-          resumes: {
-            take: 1, // your schema says Resume.userId is unique, so there will only be one anyway
-            select: {
-              id: true,
-              userId: true,
-              fullName: true,
-              email: true,
-              phone: true,
-              linkedin: true,
-              github: true,
-              portfolio: true,
-              summary: true,
-              workJson: true,
-              educationJson: true,
-              projectsJson: true,
-              technicalSkillsJson: true,
-              updatedAt: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!userSession) {
+  const session = await getSession();
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const resume = userSession.user.resumes[0];
-
+  const resume = await prisma.resume.findUnique({ where: { userId: session.userId } });
   if (!resume) {
     return NextResponse.json({ error: "Resume not found" }, { status: 404 });
   }
 
-  const llmResume = buildLLMResume(resume);
-
-  const prompt = tailorResumePrompt(llmResume, jobDescription);
-
+  const prompt = tailorResumePrompt(buildLLMResume(resume), jobDescription);
   const client = getOpenAIClient();
 
   const completion = await client.responses.create({
@@ -189,72 +145,16 @@ export async function POST(req: Request) {
     },
   });
 
-  const raw = completion.output_text;
-  console.log("RESULT: ", raw);
-  // const clean = raw
-  // .replace(/```json/gi, "")
-  // .replace(/```/g, "")
-  // .trim()
-
   let tailored;
   try {
-    // tailored = JSON.parse(clean)
     tailored = JSON.parse(completion.output_text);
   } catch (e) {
-    console.error("JSON parse failed. Cleaned result:", raw);
+    console.error("JSON parse failed:", completion.output_text);
     return NextResponse.json(
-      {
-        error: "Invalid JSON from model",
-        raw: raw,
-      },
+      { error: "Invalid JSON from model", raw: completion.output_text },
       { status: 500 }
     );
   }
 
-  console.log("tailored", tailored.workExperience);
-  console.log(
-    "skills categories:",
-    tailored?.skills?.technical?.map((s: any) => s.category)
-  );
-
   return NextResponse.json({ tailored });
-}
-
-function buildLLMResume(resume: any) {
-  return {
-    name: resume.fullName,
-    contact: {
-      email: resume.email,
-      phone: resume.phone,
-      linkedin: resume.linkedin,
-      github: resume.github,
-      portfolio: resume.portfolio,
-    },
-
-    workExperience:
-      resume.workJson?.map((job: any) => ({
-        company: job.company,
-        role: job.role ?? job.position,
-        location: job.location,
-        start: job.startDate,
-        end: job.endDate,
-        highlights: job.responsibilities ?? job.bullets ?? [],
-        tech: job.techStack ?? job.technologies ?? [],
-      })) ?? [],
-
-    education: resume.educationJson ?? [],
-
-    projects:
-      resume.projectsJson?.map((project: any) => ({
-        title: project.title,
-        tech: project.tech,
-        link: project.link,
-        start: project.startDate,
-        end: project.endDate,
-        current: project.current,
-        highlights: project.bullets ?? [],
-      })) ?? [],
-
-    skills: resume.technicalSkillsJson ?? [],
-  };
 }
