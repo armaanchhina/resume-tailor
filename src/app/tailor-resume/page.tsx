@@ -58,7 +58,6 @@ export default function TailorePage() {
         setTargetCompany(data.tailored?.targetCompany ?? null);
         setRegenerateCount((prev) => prev + 1);
       }
-      // setTailored(dummyData)
     } catch (err) {
       setError("Failed to tailor resume");
     } finally {
@@ -188,7 +187,7 @@ export default function TailorePage() {
             <div className="flex items-center gap-2">
               <Sparkles className="w-6 h-6 text-indigo-600" />
               <h2 className="text-2xl font-bold text-gray-900">
-                Tailored Resume
+                {tab === "resume" ? "Tailored Resume" : "Cover Letter"}
               </h2>
             </div>
 

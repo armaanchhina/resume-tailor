@@ -9,6 +9,7 @@ export default function SignInPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -17,28 +18,26 @@ export default function SignInPage() {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setIsLoading(true);
-    
+    setError("");
+
     try {
-      const res = await fetch("/api//sign-in", {
+      const res = await fetch("/api/sign-in", {
         method: "POST",
         headers: { "Content-Type": "application/json"},
         body: JSON.stringify(formData)
       })
 
       const data = await res.json()
-      
+
       if (!res.ok){
-        alert(data.error || "Login Failed")
-        setIsLoading(false)
+        setError(data.error || "Login failed");
         return;
       }
-
-      console.log("Logged in: ", data)
 
       router.push("/")
     } catch (err){
       console.error(err)
-      alert("Something went wrong")
+      setError("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false)
     }
@@ -124,6 +123,12 @@ export default function SignInPage() {
                 Forgot password?
               </button>
             </div>
+
+            {error && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
 
             {/* Sign In Button */}
             <button

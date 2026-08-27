@@ -23,6 +23,7 @@ export default function SignUpPage() {
     confirmPassword: ''
   });
   const [errors, setErrors] = useState<FormErrors>({});
+  const [formError, setFormError] = useState("");
 
   const validateForm = () => {
     const newErrors: FormErrors = {};
@@ -53,25 +54,23 @@ export default function SignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement> | React.MouseEvent) => {
     e.preventDefault();
-    console.log(formData)
     if (!validateForm()) return;
-  
+
     setIsLoading(true);
+    setFormError("");
     try {
       const res = await fetch("/api/sign-up", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-  
+
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || "Failed to sign up");
-  
-      // success — redirect to sign-in or home
-      router.push("/sign-in"); // or "/"
+
+      router.push("/sign-in");
     } catch (err) {
-      console.error(err);
-      // show a toast or setErrors({ email: '...' }) as needed
+      setFormError(err instanceof Error ? err.message : "Failed to sign up");
     } finally {
       setIsLoading(false);
     }
@@ -220,6 +219,12 @@ export default function SignUpPage() {
                 </button>
               </label>
             </div>
+
+            {formError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+                <p className="text-sm text-red-700">{formError}</p>
+              </div>
+            )}
 
             {/* Sign Up Button */}
             <button

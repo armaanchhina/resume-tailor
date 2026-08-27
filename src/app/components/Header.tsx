@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../lib/useAuth';
 
 export function Header() {
-  const {currentUser, authLoading} = useAuth()
+  const {currentUser, authLoading, refetch} = useAuth()
     const router = useRouter()
     return (
       <header className="bg-white shadow-sm border-b">
@@ -36,9 +36,8 @@ export function Header() {
                         credentials: "include"
                       });
 
+                      await refetch();
                       router.push("/")
-                      // Not best practice need to find suitable alternative
-                      window.location.reload();
                     }}
                     className="px-4 py-2 text-sm text-red-600 hover:text-red-800 font-medium"
                   >

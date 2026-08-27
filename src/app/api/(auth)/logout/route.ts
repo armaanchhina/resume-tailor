@@ -5,7 +5,6 @@ import { NextResponse } from "next/server";
 export async function POST() {
     const store = await cookies()
     const sessionToken = store.get("session")?.value;
-    console.log("sessionToken", sessionToken)
     if (sessionToken){
         await prisma.session.deleteMany({where: {id: sessionToken}})
     }

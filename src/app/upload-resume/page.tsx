@@ -2,7 +2,6 @@
 import { useState } from "react";
 import {
   Upload,
-  FileText,
   Check,
   Plus,
   Trash2,
@@ -25,6 +24,7 @@ import { useEffect } from "react";
 export default function UploadResumePage() {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const {
     register,
     control,
@@ -125,6 +125,7 @@ export default function UploadResumePage() {
 
   const onSubmit = async (data: ResumeFormData) => {
     setIsSaving(true);
+    setSaveError("");
     try {
       const res = await fetch("/api/resume", {
         method: "POST",
@@ -138,11 +139,9 @@ export default function UploadResumePage() {
         throw new Error(err?.error || `Request failed with ${res.status}`);
       }
 
-      const json = await res.json();
-      console.log("Resume saved", json);
       router.push("/");
     } catch (e) {
-      console.error("Failed to save resume:", e);
+      setSaveError(e instanceof Error ? e.message : "Failed to save resume");
     } finally {
       setIsSaving(false);
     }
@@ -456,6 +455,12 @@ export default function UploadResumePage() {
               ))}
             </div>
           </section>
+
+          {saveError && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+              <p className="text-sm text-red-700">{saveError}</p>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-6 border-t">
