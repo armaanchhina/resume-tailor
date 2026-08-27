@@ -50,7 +50,8 @@ model Resume {
   summary       String?
   workJson      Json
   educationJson Json
-  technicalSkillsJson Json? 
+  projectsJson  Json?
+  technicalSkillsJson Json?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

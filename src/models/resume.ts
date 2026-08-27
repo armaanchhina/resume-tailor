@@ -17,7 +17,17 @@ export interface WorkExperience {
     endDate?: string;
     gpa?: string;
   }
-  
+
+  export interface Project {
+    title: string;
+    tech?: string;
+    link?: string;
+    startDate?: string;
+    endDate?: string;
+    current?: boolean;
+    bullets: string[];
+  }
+
   export interface ResumeFormData {
     personalInfo: {
       fullName: string;
@@ -30,6 +40,7 @@ export interface WorkExperience {
     summary: string;
     workExperience: WorkExperience[];
     education: Education[];
+    projects: Project[];
     skills: {
       technical: Array<{
         category: string
@@ -97,7 +108,16 @@ export interface WorkExperience {
       startDate: string;
       endDate: string;
     }[];
-  
+
+    projects: {
+      title: string;
+      tech: string;
+      startDate: string;
+      endDate: string;
+      current?: boolean;
+      bullets: string[];
+    }[];
+
     skills: string[];
   }
   
@@ -133,6 +153,17 @@ export interface WorkExperience {
         startDate: "",
         endDate: "",
         gpa: "",
+      },
+    ],
+    projects: [
+      {
+        title: "",
+        tech: "",
+        link: "",
+        startDate: "",
+        endDate: "",
+        current: false,
+        bullets: [""],
       },
     ],
     skills: {
