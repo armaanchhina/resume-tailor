@@ -8,9 +8,10 @@ export function mapTailoredToLatex(resume: any, tailored: any) {
 
   const educationSorted = sortMostRecentFirst(resume.educationJson ?? [])
   const workSorted = sortMostRecentFirst(tailored.workExperience ?? [])
+  const projectsSorted = sortMostRecentFirst(tailored.projects ?? [])
   return {
     FULL_NAME: escapeLatex(resume.fullName),
-    PHONE: resume.phone,
+    PHONE: escapeLatex(resume.phone),
 
     EMAIL: escapeLatex(resume.email),
 
@@ -35,6 +36,15 @@ export function mapTailoredToLatex(resume: any, tailored: any) {
       responsibilities: w.responsibilities.map((r: any) => ({
         item: escapeLatex(r),
       })),
+    })),
+
+    projects: projectsSorted.map((p: any) => ({
+      title: escapeLatex(p.title),
+      tech: escapeLatex(p.tech ?? ""),
+      date: p.current
+        ? `${formatMonthYear(p.startDate)} -- Present`
+        : `${formatMonthYear(p.startDate)} -- ${formatMonthYear(p.endDate)}`,
+      bullets: (p.bullets ?? []).map((b: any) => escapeLatex(b)),
     })),
 
     technicalSkills,

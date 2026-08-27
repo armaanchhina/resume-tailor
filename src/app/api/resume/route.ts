@@ -4,6 +4,24 @@ import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
+function toProjectsJson(raw: any) {
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .map((p) => ({
+      title: (p?.title ?? "").trim(),
+      tech: (p?.tech ?? "").trim(),
+      link: (p?.link ?? "").trim(),
+      startDate: p?.startDate ?? "",
+      endDate: p?.endDate ?? "",
+      current: !!p?.current,
+      bullets: Array.isArray(p?.bullets)
+        ? p.bullets.map((b: string) => b.trim()).filter(Boolean)
+        : [],
+    }))
+    .filter((p) => p.title && p.bullets.length > 0);
+}
+
 function toTechnicalSkillsJson(raw: any) {
   if (!Array.isArray(raw)) return [];
 
@@ -49,7 +67,8 @@ export async function POST(req: Request) {
 
 
       const technicalSkillsJson = toTechnicalSkillsJson(body?.skills?.technical);
-        
+      const projectsJson = toProjectsJson(body?.projects);
+
         const resume = await prisma.resume.upsert({
         where: {userId},
         update: {
@@ -63,6 +82,7 @@ export async function POST(req: Request) {
           technicalSkillsJson,
           workJson: body.workExperience,
           educationJson: body.education,
+          projectsJson,
         },
         create: {
           userId,
@@ -76,9 +96,10 @@ export async function POST(req: Request) {
           technicalSkillsJson,
           workJson: body.workExperience,
           educationJson: body.education,
+          projectsJson,
         }
       });
-  
+
       return NextResponse.json({ ok: true, resume });
     } catch (err) {
       console.error("Error storing resume:", err);

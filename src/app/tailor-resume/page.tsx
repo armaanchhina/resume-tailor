@@ -264,6 +264,32 @@ export default function TailorePage() {
                 ))}
               </section>
 
+              {/* Projects */}
+              {tailored.projects?.length > 0 && (
+                <section className="mb-8">
+                  <h3 className="font-semibold text-lg text-gray-800 mb-4">
+                    Projects
+                  </h3>
+                  {tailored.projects.map((project: any, idx: number) => (
+                    <div key={idx} className="mb-6">
+                      <p className="font-bold text-gray-900">
+                        {project.title}
+                        {project.tech ? ` — ${project.tech}` : ""}
+                      </p>
+                      <p className="text-sm text-gray-500 mb-2">
+                        {project.startDate} –{" "}
+                        {project.current ? "Present" : project.endDate}
+                      </p>
+                      <ul className="list-disc ml-6 text-gray-700 space-y-1">
+                        {project.bullets.map((b: string, i: number) => (
+                          <li key={i}>{b}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </section>
+              )}
+
               {/* Skills */}
               <section className="mb-8">
                 <h3 className="font-semibold text-lg text-gray-800 mb-3">

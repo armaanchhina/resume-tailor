@@ -37,18 +37,24 @@ Content rules:
    - Keep roles that demonstrate transferable technical value, even if indirect.
 
 
-4. Summary:
+4. Projects:
+   - Only include projects relevant to the job description
+   - Rewrite bullets the same way as work experience: STAR method, metrics, technical depth
+   - Maximum 3 bullet points per project
+   - If the base resume has no projects, return an empty array
+
+5. Summary:
    - Generate only if base resume contains one
    - Otherwise return empty summary
 
-5. Formatting:
+6. Formatting:
    - Insert manual line breaks when needed
 
-6. Skills:
+7. Skills:
    - Include only relevant technical skills
    - Remove outdated or unrelated tools
    - Organize skills logically by category
-   
+
 Extract the target company name from the job description.
 If the company name is not explicitly stated, return null.
 
@@ -111,5 +117,3 @@ OUTPUT RULES:
 - No extra commentary
 - Must be 350 to 420 words
 `;
-
-

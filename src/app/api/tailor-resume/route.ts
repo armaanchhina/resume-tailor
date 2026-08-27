@@ -39,6 +39,7 @@ export async function POST(req: Request) {
               summary: true,
               workJson: true,
               educationJson: true,
+              projectsJson: true,
               technicalSkillsJson: true,
               updatedAt: true,
             },
@@ -61,7 +62,7 @@ export async function POST(req: Request) {
   const llmResume = buildLLMResume(resume);
 
   const prompt = tailorResumePrompt(llmResume, jobDescription);
-  
+
   const client = getOpenAIClient();
 
   const completion = await client.responses.create({
@@ -132,6 +133,33 @@ export async function POST(req: Request) {
               },
             },
 
+            projects: {
+              type: "array",
+              items: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  title: { type: "string" },
+                  tech: { type: "string" },
+                  startDate: { type: "string" },
+                  endDate: { type: "string" },
+                  current: { type: "boolean" },
+                  bullets: {
+                    type: "array",
+                    items: { type: "string" },
+                  },
+                },
+                required: [
+                  "title",
+                  "tech",
+                  "startDate",
+                  "endDate",
+                  "current",
+                  "bullets",
+                ],
+              },
+            },
+
             skills: {
               type: "object",
               additionalProperties: false,
@@ -155,7 +183,7 @@ export async function POST(req: Request) {
               required: ["technical"],
             },
           },
-          required: ["summary", "targetCompany", "workExperience", "education", "skills"],
+          required: ["summary", "targetCompany", "workExperience", "education", "projects", "skills"],
         },
       },
     },
@@ -215,6 +243,17 @@ function buildLLMResume(resume: any) {
       })) ?? [],
 
     education: resume.educationJson ?? [],
+
+    projects:
+      resume.projectsJson?.map((project: any) => ({
+        title: project.title,
+        tech: project.tech,
+        link: project.link,
+        start: project.startDate,
+        end: project.endDate,
+        current: project.current,
+        highlights: project.bullets ?? [],
+      })) ?? [],
 
     skills: resume.technicalSkillsJson ?? [],
   };

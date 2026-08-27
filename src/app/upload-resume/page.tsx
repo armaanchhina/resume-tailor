@@ -9,6 +9,7 @@ import {
   Briefcase,
   GraduationCap,
   Award,
+  FolderGit2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Header } from "../components/Header";
@@ -16,6 +17,7 @@ import { Footer } from "../components/Footer";
 import { useForm, useFieldArray } from "react-hook-form";
 import WorkExperienceSection from "../components/WorkExperienceSection";
 import EducationSection from "../components/EducationSection";
+import ProjectsSection from "../components/ProjectsSection";
 import { ResumeFormData, defaultResumeValues } from "@/models/resume";
 import { Input } from "../components/ui/Input";
 import { useEffect } from "react";
@@ -63,6 +65,9 @@ export default function UploadResumePage() {
           summary: resume.summary || "",
           workExperience: resume.workJson || [],
           education: resume.educationJson || [],
+          projects: resume.projectsJson?.length
+            ? resume.projectsJson
+            : defaultResumeValues.projects,
           skills: {
             technical: (resume.technicalSkillsJson ?? []).map((s: any) => ({
               category: s.category ?? "",
@@ -97,6 +102,15 @@ export default function UploadResumePage() {
   } = useFieldArray({
     control,
     name: "education",
+  });
+
+  const {
+    fields: projectFields,
+    append: appendProject,
+    remove: removeProject,
+  } = useFieldArray({
+    control,
+    name: "projects",
   });
 
   // add near other field arrays
@@ -325,6 +339,53 @@ export default function UploadResumePage() {
                 remove={removeEdu}
                 canRemove={eduFields.length > 1}
                 errors={errors}
+              />
+            ))}
+          </section>
+
+          {/* Projects Section */}
+          <section className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <FolderGit2 className="w-6 h-6 text-indigo-600" />
+                Projects
+              </h2>
+              <button
+                type="button"
+                onClick={() =>
+                  appendProject({
+                    title: "",
+                    tech: "",
+                    link: "",
+                    startDate: "",
+                    endDate: "",
+                    current: false,
+                    bullets: [""],
+                  })
+                }
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add Project
+              </button>
+            </div>
+
+            {projectFields.length === 0 && (
+              <p className="text-sm text-gray-500">
+                Optional — add side projects, open source work, or anything worth showing off.
+              </p>
+            )}
+
+            {projectFields.map((field, index) => (
+              <ProjectsSection
+                key={field.id}
+                index={index}
+                register={register}
+                control={control}
+                remove={removeProject}
+                canRemove={projectFields.length >= 1}
+                errors={errors}
+                watch={watch}
               />
             ))}
           </section>

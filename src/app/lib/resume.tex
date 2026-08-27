@@ -56,6 +56,12 @@
   \end{tabular*}\vspace{-14pt}
 }
 \newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
+\newcommand{\resumeProjectHeading}[2]{
+  \item
+  \begin{tabular*}{\textwidth}[t]{l@{\extracolsep{\fill}}r}
+    \small#1 & #2 \\
+  \end{tabular*}\vspace{-14pt}
+}
 \newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0in, label={}]}
 \newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
 \newcommand{\resumeItemListStart}{
@@ -124,28 +130,28 @@
 {{/workExperience}}
 \resumeSubHeadingListEnd
 
-% %-------------------------
-% % PROJECTS
-% %-------------------------
-% {{#projects}}
-% \section{Projects}
-% \resumeSubHeadingListStart
-% {{#projects}}
-%   \resumeProjectHeading
-%     {\textbf{{title}} $|$ \emph{{tech}}}
-%     {{date}}
-%   \resumeItemListStart
-%     {{#bullets}}
-%       \resumeItem{{{.}}}
-%     {{/bullets}}
-%   \resumeItemListEnd
-% {{/projects}}
-% \resumeSubHeadingListEnd
-% {{/projects}}
+%-------------------------
+% PROJECTS
+%-------------------------
+{{#projects.length}}
+\section{Projects}
+\resumeSubHeadingListStart
+{{#projects}}
+  \resumeProjectHeading
+    { \textbf{ {{title}} } $|$ \emph{ {{tech}} } }
+    { {{date}} }
+  \resumeItemListStart
+    {{#bullets}}
+      \resumeItem{ {{.}} }
+    {{/bullets}}
+  \resumeItemListEnd
+{{/projects}}
+\resumeSubHeadingListEnd
+{{/projects.length}}
 
-% %-------------------------
-% % SKILLS
-% %-------------------------
+%-------------------------
+% SKILLS
+%-------------------------
 \section{Technical Skills}
 \begin{itemize}[leftmargin=0.15in, label={}]
   \small{
