@@ -14,11 +14,24 @@ Ground truth rule (most important):
 Principles:
 - Prioritize relevance over completeness
 - No fluff, no buzzwords, no vague claims
-- Write in a natural human tone
+- Write in a natural human tone, like a sharp engineer describing their own work, not a
+  template generating a resume
 - Each bullet should communicate a clear action → impact → result
 - Emphasize engineering outcomes, systems, performance, scale, and measurable impact
-- Use strong action verbs
+- Use strong, specific verbs — avoid stock resume filler like "responsible for," "leveraged,"
+  "spearheaded," "results-driven," "team player," "passionate about," "utilized," or "proven
+  track record." Say what was actually built or fixed, plainly.
+- Make the relevance to this specific job obvious to a human skimming it, not just to an ATS:
+  when a bullet demonstrates something the posting explicitly asks for, phrase it so that
+  connection is immediately visible
 - Write like a professional software engineering resume reviewer expects
+
+Length constraint (important):
+- The final resume must fit on a single page. Be ruthless about cutting anything that isn't
+  directly relevant to this job — this is not the place to be exhaustive.
+- Within every list (work experience, each role's bullets, projects, each project's bullets),
+  order items from most to least relevant to the job description. The lowest-priority items may
+  get trimmed automatically to make everything fit, so put your best material first.
 
 Content rules:
 
@@ -38,14 +51,15 @@ Content rules:
    - concise phrasing
 
 3. Bullet limit:
-   - Maximum 3–4 bullet points per role
+   - Maximum 3 bullet points per role
    - Keep only the most impactful and relevant work
    - Keep roles that demonstrate transferable technical value, even if indirect
 
 4. Projects:
-   - Only include projects relevant to the job description
+   - Only include projects clearly relevant to the job description — when work experience already
+     covers the required skills well, it's fine to include fewer projects, or none
    - Rewrite bullets the same way as work experience: STAR method, existing metrics, technical depth
-   - Maximum 3 bullet points per project
+   - Maximum 2 bullet points per project
    - If the base resume has no projects, return an empty array
 
 5. Summary:
@@ -91,15 +105,29 @@ IMPORTANT:
 You are writing ONLY the main content that goes between greeting and closing.
 
 WRITING STYLE RULES:
-- honest and human
-- no fluff
-- no corporate buzzwords
-- no dashes
-- simple clear sentences
-- confident but not arrogant
+- honest and human — write like this person is actually talking to the hiring manager, not
+  reciting their resume at them
+- no fluff, no corporate buzzwords, no dashes
+- vary sentence length on purpose: mix short, direct sentences with longer ones. Text that's
+  all similarly-sized sentences back to back reads like it was generated, not written
+- avoid AI-cliché phrases entirely: "I am excited/thrilled to apply," "passionate about,"
+  "proven track record," "extensive experience," "leverage my skills," "fast-paced
+  environment," "dynamic team," "results-driven," "seamlessly," "utilize," "spearheaded"
+- avoid stiff transition words like "Furthermore," "Moreover," "Additionally," "In conclusion"
+  — connect ideas the way a person actually talks
+- don't open every sentence with "I" — restructure some sentences around the work itself
+- confident but not arrogant, and never generic — every claim should be specific enough that
+  it could only be true of this candidate, not swappable into anyone else's cover letter
 - focus on impact and results
-- sound like a real motivated candidate
-- natural storytelling when describing experience
+
+RELATE EXPERIENCE TO THE JOB (this is the core of the letter):
+- Don't just list what the candidate has done — for each thing you bring up, make the
+  connection to this specific job explicit and causal. Say why it matters for this role, not
+  just that it happened.
+- Anchor at least one or two points to something concrete in the job description (a
+  responsibility, a technology, a problem they're clearly trying to solve) and show how the
+  candidate's actual experience addresses it.
+- Prefer one well-connected, specific example over several shallow ones.
 
 STRUCTURE:
 - 2 to 4 paragraphs total
