@@ -5,6 +5,7 @@ import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { Sparkles } from "lucide-react";
 import { TailoredResume } from "@/models/resume";
+import { formatMonthYear, sortMostRecentFirst } from "@/app/lib/mapToLatex";
 import { useRouter } from "next/navigation";
 
 const MAX_REGENERATES = 3;
@@ -246,13 +247,13 @@ export default function TailorePage() {
                 <h3 className="font-semibold text-lg text-gray-800 mb-4">
                   Work Experience
                 </h3>
-                {tailored.workExperience.map((job: any, idx: number) => (
+                {sortMostRecentFirst(tailored.workExperience).map((job: any, idx: number) => (
                   <div key={idx} className="mb-6">
                     <p className="font-bold text-gray-900">
                       {job.position} — {job.company}
                     </p>
                     <p className="text-sm text-gray-500 mb-2">
-                      {job.startDate} – {job.current ? "Present" : job.endDate}
+                      {formatMonthYear(job.startDate)} – {job.current ? "Present" : formatMonthYear(job.endDate)}
                     </p>
                     <ul className="list-disc ml-6 text-gray-700 space-y-1">
                       {job.responsibilities.map((r: string, i: number) => (
@@ -269,15 +270,15 @@ export default function TailorePage() {
                   <h3 className="font-semibold text-lg text-gray-800 mb-4">
                     Projects
                   </h3>
-                  {tailored.projects.map((project: any, idx: number) => (
+                  {sortMostRecentFirst(tailored.projects).map((project: any, idx: number) => (
                     <div key={idx} className="mb-6">
                       <p className="font-bold text-gray-900">
                         {project.title}
                         {project.tech ? ` — ${project.tech}` : ""}
                       </p>
                       <p className="text-sm text-gray-500 mb-2">
-                        {project.startDate} –{" "}
-                        {project.current ? "Present" : project.endDate}
+                        {formatMonthYear(project.startDate)} –{" "}
+                        {project.current ? "Present" : formatMonthYear(project.endDate)}
                       </p>
                       <ul className="list-disc ml-6 text-gray-700 space-y-1">
                         {project.bullets.map((b: string, i: number) => (

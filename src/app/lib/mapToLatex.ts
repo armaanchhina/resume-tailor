@@ -9,15 +9,20 @@ export function mapTailoredToLatex(resume: any, tailored: any) {
   const educationSorted = sortMostRecentFirst(resume.educationJson ?? [])
   const workSorted = sortMostRecentFirst(tailored.workExperience ?? [])
   const projectsSorted = sortMostRecentFirst(tailored.projects ?? [])
+
+  const contactLine = [
+    escapeLatex(resume.phone),
+    escapeLatex(resume.email),
+    escapeLatex(stripProtocol(resume.linkedin)),
+    escapeLatex(stripProtocol(resume.github)),
+  ]
+    .filter(Boolean)
+    .join(" $|$ ")
+
   return {
     FULL_NAME: escapeLatex(resume.fullName),
-    PHONE: escapeLatex(resume.phone),
+    CONTACT_LINE: contactLine,
 
-    EMAIL: escapeLatex(resume.email),
-
-    LINKEDIN: escapeLatex(stripProtocol(resume.linkedin)),
-    GITHUB: escapeLatex(stripProtocol(resume.github)),
-    
 
     education: educationSorted.map((e: any) => ({
       school: escapeLatex(e.school),
@@ -32,7 +37,7 @@ export function mapTailoredToLatex(resume: any, tailored: any) {
       position: escapeLatex(w.position),
       location: escapeLatex(w.location),
       startDate: formatMonthYear(w.startDate),
-      endDate: formatMonthYear(w.endDate),
+      endDate: w.current ? "Present" : formatMonthYear(w.endDate),
       responsibilities: w.responsibilities.map((r: any) => ({
         item: escapeLatex(r),
       })),
@@ -118,7 +123,7 @@ function escapeLatex(input: string) {
 }
 
 
-function formatMonthYear(str: string): string {
+export function formatMonthYear(str?: string | null): string {
   if (!str) return ""
 
   const [year, month] = str.split("-")
@@ -143,7 +148,7 @@ function ymToNumber(ym: YM): number {
   return yy * 100 + mm
 }
 
-function sortMostRecentFirst<T extends { startDate?: YM; endDate?: YM; current?: boolean }>(
+export function sortMostRecentFirst<T extends { startDate?: YM; endDate?: YM; current?: boolean }>(
   arr: T[]
 ): T[] {
   return [...arr].sort((a, b) => {
