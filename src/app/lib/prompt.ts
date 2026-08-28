@@ -63,8 +63,12 @@ Content rules:
    - Keep roles that demonstrate transferable technical value, even if indirect
 
 4. Projects:
-   - Only include projects clearly relevant to the job description — when work experience already
-     covers the required skills well, it's fine to include fewer projects, or none
+   - Default to including every project from the base resume — they show initiative and breadth
+     that work experience alone doesn't. Only drop one entirely if it has no plausible relevance
+     to this job at all (e.g. a completely unrelated domain and no shared technology).
+   - Space is not your concern here — a later step measures the actual rendered page and trims
+     the lowest-priority content automatically if needed. Don't preemptively omit or shorten a
+     relevant project to "save room."
    - Rewrite bullets the same way as work experience: STAR method, existing metrics, technical depth
    - Maximum 2 bullet points per project
    - If the base resume has no projects, return an empty array
