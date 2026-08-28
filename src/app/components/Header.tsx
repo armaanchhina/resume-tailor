@@ -1,6 +1,8 @@
 import { FileText, User } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../lib/useAuth';
+import { ProfileMenu } from './ProfileMenu';
 
 export function Header() {
   const {currentUser, authLoading, refetch} = useAuth()
@@ -8,10 +10,10 @@ export function Header() {
     return (
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2" onClick={() => router.push("/")}>
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition">
             <FileText className="w-7 h-7 text-indigo-600" />
             <h1 className="text-2xl font-bold text-gray-900">ResumeTailor</h1>
-          </div>
+          </Link>
 
           <div className="flex items-center gap-4">
             { authLoading ? null : (
@@ -25,25 +27,18 @@ export function Header() {
               )}
 
               {currentUser && (
-                <>
-                <span className='text-sm text-gray-700'>
-                  {currentUser.name || currentUser.email}
-                </span>
-                <button
-                    onClick={async () => {
-                      await fetch("/api/logout", {
-                        method: "POST",
-                        credentials: "include"
-                      });
+                <ProfileMenu
+                  name={currentUser.name || currentUser.email}
+                  onLogout={async () => {
+                    await fetch("/api/logout", {
+                      method: "POST",
+                      credentials: "include"
+                    });
 
-                      await refetch();
-                      router.push("/")
-                    }}
-                    className="px-4 py-2 text-sm text-red-600 hover:text-red-800 font-medium"
-                  >
-                    Logout
-                  </button>
-                </>
+                    await refetch();
+                    router.push("/")
+                  }}
+                />
               )}
               </>
             )}
