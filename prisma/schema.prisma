@@ -48,6 +48,7 @@ model Resume {
   github        String?
   portfolio     String?
   summary       String?
+  additionalInfo String?
   workJson      Json
   educationJson Json
   projectsJson  Json?

@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Resume not found" }, { status: 404 });
   }
 
-  const prompt = tailorResumePrompt(buildLLMResume(resume), jobDescription);
+  const prompt = tailorResumePrompt(buildLLMResume(resume), jobDescription, resume.additionalInfo ?? undefined);
   const client = getOpenAIClient();
 
   const completion = await client.responses.create({

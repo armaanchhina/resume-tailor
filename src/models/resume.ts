@@ -38,6 +38,7 @@ export interface WorkExperience {
       portfolio?: string;
     };
     summary: string;
+    additionalInfo: string;
     workExperience: WorkExperience[];
     education: Education[];
     projects: Project[];
@@ -134,6 +135,7 @@ export interface WorkExperience {
       portfolio: "",
     },
     summary: "",
+    additionalInfo: "",
     workExperience: [
       {
         company: "",

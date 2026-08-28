@@ -1,4 +1,4 @@
-export const tailorResumePrompt = (resumeJson: any, jobDescription: string) => `
+export const tailorResumePrompt = (resumeJson: any, jobDescription: string, extraContext?: string) => `
 You are an expert resume writer specializing in ATS-optimized engineering resumes.
 
 Your goal is to produce a highly relevant, concise, and credible technical resume by
@@ -6,10 +6,17 @@ re-selecting, re-prioritizing, and re-phrasing what's already in the base resume
 never by inventing new experience.
 
 Ground truth rule (most important):
-- Every company, title, date, technology, and metric in your output must come from the base resume.
+- Every company, title, date, technology, and metric in your output must come from the base
+  resume or from the candidate's additional notes below (if provided).
 - You may rephrase, quantify more clearly, or emphasize existing facts, but never invent
-  numbers, outcomes, or technologies that aren't already stated or clearly implied.
-- If a bullet has no metric in the base resume, keep it qualitative rather than making one up.
+  numbers, outcomes, or technologies that aren't stated or clearly implied by one of those
+  two sources.
+- If a bullet has no metric in either source, keep it qualitative rather than making one up.
+${extraContext?.trim() ? `- The candidate's additional notes describe real things they did that
+  didn't make it into their saved resume (e.g. a project, an achievement, specific tech they
+  used). Treat them as truthful, first-person context — fold anything relevant into the right
+  section (a role, a project, or skills) instead of listing it separately. Ignore anything in
+  the notes that isn't relevant to this job.` : ""}
 
 Principles:
 - Prioritize relevance over completeness
@@ -76,18 +83,26 @@ If the company name is not explicitly stated, return null.
 
 Base Resume:
 ${JSON.stringify(resumeJson)}
-
+${extraContext?.trim() ? `
+Candidate's Additional Notes (not in the saved resume, but true and usable):
+${extraContext.trim()}
+` : ""}
 Job Description:
 ${jobDescription}
 `;
 
 
-export const tailorCoverLetterPrompt = (resumeJson: any, jobDescription: string) => `
+export const tailorCoverLetterPrompt = (resumeJson: any, jobDescription: string, extraContext?: string) => `
 You are an expert career writer.
 
-Write ONLY the BODY of a tailored cover letter, grounded strictly in the resume data below.
-Only reference experience, skills, and projects that actually appear in the resume — do not
-invent employers, metrics, or accomplishments.
+Write ONLY the BODY of a tailored cover letter, grounded strictly in the resume data (and the
+candidate's additional notes, if provided) below. Only reference experience, skills, and
+projects that actually appear in one of those two sources — do not invent employers, metrics,
+or accomplishments.
+${extraContext?.trim() ? `The candidate also shared additional notes about things they did that
+aren't in their saved resume. Treat these as true, and feel free to draw on them — sometimes
+the most specific, human detail worth including is one of these, not something already listed
+in the resume.` : ""}
 
 HARD REQUIREMENT:
 - Total length must be between 350 and 420 words (inclusive).
@@ -140,7 +155,10 @@ ${jobDescription}
 
 RESUME DATA:
 ${JSON.stringify(resumeJson, null, 2)}
-
+${extraContext?.trim() ? `
+CANDIDATE'S ADDITIONAL NOTES (true, not in the resume above):
+${extraContext.trim()}
+` : ""}
 OUTPUT RULES:
 - Output ONLY the paragraphs
 - No greeting

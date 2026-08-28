@@ -63,6 +63,7 @@ export default function UploadResumePage() {
             portfolio: resume.portfolio || "",
           },
           summary: resume.summary || "",
+          additionalInfo: resume.additionalInfo || "",
           workExperience: resume.workJson || [],
           education: resume.educationJson || [],
           projects: resume.projectsJson?.length
@@ -454,6 +455,22 @@ export default function UploadResumePage() {
                 </div>
               ))}
             </div>
+          </section>
+
+          {/* Additional Info */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Anything else? (optional)
+            </h2>
+            <p className="text-sm text-gray-600 mb-3">
+              Side projects, achievements, or specific tech you've used that didn't fit
+              above — we'll draw on this when a job posting calls for it.
+            </p>
+            <textarea
+              {...register("additionalInfo")}
+              placeholder="e.g. Built a Kafka-based pipeline over a weekend, handled ~10k events/min. Not on the resume above, but worth mentioning if a job asks for event-driven experience."
+              className="w-full h-24 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none resize-none"
+            />
           </section>
 
           {saveError && (

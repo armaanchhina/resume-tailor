@@ -28,21 +28,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let resumeForPrompt = tailoredResume && typeof tailoredResume === "object" ? tailoredResume : null;
+  const dbResume = await prisma.resume.findUnique({
+    where: { userId: session.userId },
+  });
 
-  if (!resumeForPrompt) {
-    const dbResume = await prisma.resume.findUnique({
-      where: { userId: session.userId },
-    });
-
-    if (!dbResume) {
-      return NextResponse.json({ error: "Resume not found" }, { status: 404 });
-    }
-
-    resumeForPrompt = buildLLMResume(dbResume);
+  if (!dbResume) {
+    return NextResponse.json({ error: "Resume not found" }, { status: 404 });
   }
 
-  const prompt = tailorCoverLetterPrompt(resumeForPrompt, jobDescription);
+  const resumeForPrompt =
+    tailoredResume && typeof tailoredResume === "object" ? tailoredResume : buildLLMResume(dbResume);
+
+  const prompt = tailorCoverLetterPrompt(resumeForPrompt, jobDescription, dbResume.additionalInfo ?? undefined);
   const client = getOpenAIClient();
 
   const completion = await client.responses.create({
