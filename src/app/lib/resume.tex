@@ -99,6 +99,7 @@
 %-------------------------
 % EDUCATION
 %-------------------------
+{{#education.length}}
 \section{Education}
 \resumeSubHeadingListStart
 {{#education}}
@@ -110,10 +111,12 @@
 {{/education}}
 
 \resumeSubHeadingListEnd
+{{/education.length}}
 
 %-------------------------
 % EXPERIENCE
 %-------------------------
+{{#workExperience.length}}
 \section{Experience}
 \resumeSubHeadingListStart
 {{#workExperience}}
@@ -122,13 +125,16 @@
   { {{startDate}} -- {{endDate}} }
   { {{company}} }
   { {{location}} }
+  {{#responsibilities.length}}
   \resumeItemListStart
     {{#responsibilities}}
         \resumeItem{ {{item}} }
     {{/responsibilities}}
   \resumeItemListEnd
+  {{/responsibilities.length}}
 {{/workExperience}}
 \resumeSubHeadingListEnd
+{{/workExperience.length}}
 
 %-------------------------
 % PROJECTS
@@ -140,11 +146,13 @@
   \resumeProjectHeading
     { \textbf{ {{title}} } $|$ \emph{ {{tech}} } }
     { {{date}} }
+  {{#bullets.length}}
   \resumeItemListStart
     {{#bullets}}
       \resumeItem{ {{.}} }
     {{/bullets}}
   \resumeItemListEnd
+  {{/bullets.length}}
 {{/projects}}
 \resumeSubHeadingListEnd
 {{/projects.length}}
@@ -152,6 +160,7 @@
 %-------------------------
 % SKILLS
 %-------------------------
+{{#technicalSkills.length}}
 \section{Technical Skills}
 \begin{itemize}[leftmargin=0.15in, label={}]
   \small{
@@ -162,6 +171,7 @@
     }
   }
 \end{itemize}
+{{/technicalSkills.length}}
 
 
 \end{document}

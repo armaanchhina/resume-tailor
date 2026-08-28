@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "fs/promises";
+import { readFile, writeFile, unlink } from "fs/promises";
 import Mustache from "mustache";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -6,8 +6,37 @@ import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { getSession } from "@/app/lib/auth";
 import { mapTailoredToLatex } from "@/app/lib/mapToLatex";
+import { trimOneStep } from "@/app/lib/fitResumeToOnePage";
 
 const execAsync = promisify(exec);
+const MAX_TRIM_ATTEMPTS = 15;
+
+async function renderPdf(latexData: any, template: string) {
+  const filled = Mustache.render(template, latexData);
+
+  const id = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const texPath = `/tmp/resume_${id}.tex`;
+  const pdfPath = `/tmp/resume_${id}.pdf`;
+  const logPath = `/tmp/resume_${id}.log`;
+
+  try {
+    await writeFile(texPath, filled);
+    await execAsync(`pdflatex -interaction=nonstopmode -output-directory=/tmp ${texPath}`);
+
+    const log = await readFile(logPath, "utf8").catch(() => "");
+    const pageMatch = log.match(/Output written on .*\((\d+) pages?,/);
+    const pages = pageMatch ? Number(pageMatch[1]) : 1;
+
+    const pdf = await readFile(pdfPath);
+    return { pdf, pages };
+  } finally {
+    await Promise.all(
+      [".tex", ".pdf", ".log", ".aux", ".out"]
+        .map((ext) => `/tmp/resume_${id}${ext}`)
+        .map((p) => unlink(p).catch(() => {}))
+    );
+  }
+}
 
 export async function POST(req: Request){
     try {
@@ -24,26 +53,25 @@ export async function POST(req: Request){
           return NextResponse.json({error: "Resume not found"}, { status: 404})
         }
 
-        const data = await req.json();
-        const latexData = mapTailoredToLatex(resume, data)
+        const tailored = await req.json();
         const template = await readFile(process.cwd() + "/src/app/lib/resume.tex", "utf8");
         Mustache.escape = (text) => text;
-        const filled = Mustache.render(template, latexData)
 
-        const texPath = `/tmp/resume_${Date.now()}.tex`
-        const pdfPath = texPath.replace(".tex", ".pdf")
+        let { pdf, pages } = await renderPdf(mapTailoredToLatex(resume, tailored), template);
 
-        await writeFile(texPath, filled)
-
-        await execAsync(`pdflatex -interaction=nonstopmode -output-directory=/tmp ${texPath}`)
-
-        const pdf = await readFile(pdfPath)
+        let attempts = 0;
+        while (pages > 1 && attempts < MAX_TRIM_ATTEMPTS && trimOneStep(tailored)) {
+          ({ pdf, pages } = await renderPdf(mapTailoredToLatex(resume, tailored), template));
+          attempts++;
+        }
 
         return new NextResponse(pdf, {
             status: 200,
             headers: {
               "Content-Type": "application/pdf",
-              "Content-Disposition": 'attachment; filename="resume.pdf"'
+              "Content-Disposition": 'attachment; filename="resume.pdf"',
+              "X-Resume-Pages": String(pages),
+              "X-Resume-Trim-Attempts": String(attempts),
             }
           });
 
