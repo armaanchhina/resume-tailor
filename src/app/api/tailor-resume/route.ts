@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   const client = getOpenAIClient();
 
   const completion = await client.responses.create({
-    model: "gpt-5.1-chat-latest",
+    model: "gpt-5.5",
     input: prompt,
     text: {
       format: {
