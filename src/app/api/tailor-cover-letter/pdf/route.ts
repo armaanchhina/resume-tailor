@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "fs/promises";
+import { readFile, writeFile, unlink } from "fs/promises";
 import Mustache from "mustache";
 import { promisify } from "util";
 import { exec } from "child_process";
@@ -49,7 +49,7 @@ const COVER_LETTER_TEX = `
 \\rule{\\textwidth}{0.8pt}
 
 \\vspace{-8pt}
-{\\small {{{LOCATION}}} - {{{PHONE}}} - {{{EMAIL_TEXT}}}}\\\\[8pt]
+{\\small {{{CONTACT_LINE}}}}\\\\[8pt]
 {\\small {{{DATE}}}}\\\\[12pt]
 \\end{flushright}
 
@@ -67,6 +67,34 @@ Sincerely,\\\\
 \\end{document}
 `;
 
+async function renderPdf(view: any) {
+  Mustache.escape = (text) => text;
+  const filled = Mustache.render(COVER_LETTER_TEX, view);
+
+  const id = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const texPath = `/tmp/cover_letter_${id}.tex`;
+  const pdfPath = `/tmp/cover_letter_${id}.pdf`;
+  const logPath = `/tmp/cover_letter_${id}.log`;
+
+  try {
+    await writeFile(texPath, filled, "utf8");
+    await execAsync(`pdflatex -interaction=nonstopmode -output-directory=/tmp "${texPath}"`);
+
+    const log = await readFile(logPath, "utf8").catch(() => "");
+    const pageMatch = log.match(/Output written on .*\((\d+) pages?,/);
+    const pages = pageMatch ? Number(pageMatch[1]) : 1;
+
+    const pdf = await readFile(pdfPath);
+    return { pdf, pages };
+  } finally {
+    await Promise.all(
+      [".tex", ".pdf", ".log", ".aux", ".out"]
+        .map((ext) => `/tmp/cover_letter_${id}${ext}`)
+        .map((p) => unlink(p).catch(() => {}))
+    );
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const session = await getSession();
@@ -81,7 +109,7 @@ export async function POST(req: Request) {
     if (!resume) {
       return NextResponse.json({ error: "Resume not found" }, { status: 404 });
     }
-    const { coverLetter } = await req.json();
+    const { coverLetter, company } = await req.json();
 
     if (typeof coverLetter !== "string" || !coverLetter.trim()) {
       return NextResponse.json(
@@ -93,26 +121,17 @@ export async function POST(req: Request) {
     const view = mapCoverLetterToLatex({
       resume,
       coverLetter,
+      company: typeof company === "string" ? company : undefined,
     })
-    
-    Mustache.escape = (text) => text;
-    const filled = Mustache.render(COVER_LETTER_TEX, view);
 
-    const texPath = `/tmp/cover_letter_${Date.now()}.tex`;
-    const pdfPath = texPath.replace(".tex", ".pdf");
-
-    await writeFile(texPath, filled, "utf8");
-    await execAsync(
-      `pdflatex -interaction=nonstopmode -output-directory=/tmp "${texPath}"`
-    );
-
-    const pdf = await readFile(pdfPath);
+    const { pdf, pages } = await renderPdf(view);
 
     return new NextResponse(pdf, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": 'attachment; filename="cover_letter.pdf"',
+        "X-CoverLetter-Pages": String(pages),
       },
     });
   } catch (err) {

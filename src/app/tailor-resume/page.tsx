@@ -115,7 +115,7 @@ export default function TailorePage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ coverLetter: coverLetterBody }),
+      body: JSON.stringify({ coverLetter: coverLetterBody, company: targetCompany }),
     });
 
     if (!res.ok) {

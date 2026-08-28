@@ -59,24 +59,23 @@ type CoverLetterViewParams = {
     linkedin?: string | null
   }
   coverLetter: string
-  location?: string
-  recipient?: string
+  company?: string | null
 }
 
 export function mapCoverLetterToLatex({
   resume,
   coverLetter,
-  location = "Victoria, BC",
-  recipient = "Hiring Team",
+  company,
 }: CoverLetterViewParams) {
   const emailRaw = (resume.email ?? "").trim()
 
+  const contactLine = [resume.phone, emailRaw]
+    .filter((part) => part && part.trim())
+    .join("  |  ")
+
   return {
     FULL_NAME: escapeLatex(resume.fullName ?? ""),
-    LOCATION: escapeLatex(location),
-    PHONE: escapeLatex(resume.phone ?? ""),
-    EMAIL_RAW: emailRaw,                 // raw if ever needed
-    EMAIL_TEXT: escapeLatex(emailRaw),   // escaped for LaTeX
+    CONTACT_LINE: escapeLatex(contactLine),
     DATE: escapeLatex(
       new Date().toLocaleDateString("en-CA", {
         year: "numeric",
@@ -84,7 +83,7 @@ export function mapCoverLetterToLatex({
         day: "numeric",
       })
     ),
-    RECIPIENT: escapeLatex(recipient),
+    RECIPIENT: escapeLatex(company ? `${company} Hiring Team` : "Hiring Team"),
     BODY: textToLatexParagraphs(coverLetter),
   }
 }
