@@ -33,12 +33,13 @@ services:
       context: .
     image: nextjs-dev
     ports:
-      - "3000:3000"
+      - "3001:3000"
     env_file:
       - .env.docker
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://docker:docker@postgres:5432/resume-tailor
+      # OPENAI_API_KEY comes from .env.docker (gitignored), not hardcoded here
 
     volumes:
       - ./src:/app/src/

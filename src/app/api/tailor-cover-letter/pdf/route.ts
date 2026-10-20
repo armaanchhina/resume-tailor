@@ -3,8 +3,8 @@ import Mustache from "mustache";
 import { promisify } from "util";
 import { exec } from "child_process";
 import { NextResponse } from "next/server";
-import prisma from "@/app/lib/db";
 import { getSession } from "@/app/lib/auth";
+import { getUserResume } from "@/app/lib/getUserResume";
 import { mapCoverLetterToLatex } from "@/app/lib/mapToLatex";
 
 const execAsync = promisify(exec);
@@ -78,7 +78,7 @@ async function renderPdf(view: any) {
 
   try {
     await writeFile(texPath, filled, "utf8");
-    await execAsync(`pdflatex -interaction=nonstopmode -output-directory=/tmp "${texPath}"`);
+    await execAsync(`pdflatex -interaction=nonstopmode -output-directory=/tmp "${texPath}"`, { timeout: 20_000 });
 
     const log = await readFile(logPath, "utf8").catch(() => "");
     const pageMatch = log.match(/Output written on .*\((\d+) pages?,/);
@@ -102,14 +102,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const resume = await prisma.resume.findUnique({
-      where: { userId: session.userId },
-    });
+    const { coverLetter, company, resumeId } = await req.json();
 
+    const resume = await getUserResume(session.userId, resumeId);
     if (!resume) {
       return NextResponse.json({ error: "Resume not found" }, { status: 404 });
     }
-    const { coverLetter, company } = await req.json();
 
     if (typeof coverLetter !== "string" || !coverLetter.trim()) {
       return NextResponse.json(
@@ -126,7 +124,7 @@ export async function POST(req: Request) {
 
     const { pdf, pages } = await renderPdf(view);
 
-    return new NextResponse(pdf, {
+    return new NextResponse(new Uint8Array(pdf), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",

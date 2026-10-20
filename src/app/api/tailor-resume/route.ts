@@ -3,17 +3,40 @@ import { tailorResumePrompt } from "@/app/lib/prompt";
 import { getSession } from "@/app/lib/auth";
 import { getOpenAIClient } from "@/app/lib/openai";
 import { buildLLMResume } from "@/app/lib/buildLLMResume";
-import prisma from "@/app/lib/db";
+import { getUserResume } from "@/app/lib/getUserResume";
+import { checkRateLimit } from "@/app/lib/rateLimit";
+
+const MAX_JOB_DESCRIPTION_LENGTH = 10_000;
+const DAILY_LIMIT = 30;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export async function POST(req: Request) {
-  const { jobDescription } = await req.json();
+  const { jobDescription, resumeId } = await req.json();
+
+  if (typeof jobDescription !== "string" || !jobDescription.trim()) {
+    return NextResponse.json({ error: "jobDescription is required" }, { status: 400 });
+  }
+  if (jobDescription.length > MAX_JOB_DESCRIPTION_LENGTH) {
+    return NextResponse.json(
+      { error: `jobDescription is too long (max ${MAX_JOB_DESCRIPTION_LENGTH} characters)` },
+      { status: 400 }
+    );
+  }
 
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const resume = await prisma.resume.findUnique({ where: { userId: session.userId } });
+  const rateLimit = checkRateLimit(`tailor-resume:${session.userId}`, DAILY_LIMIT, DAY_MS);
+  if (!rateLimit.ok) {
+    return NextResponse.json(
+      { error: "You've hit today's resume-tailoring limit. Please try again tomorrow." },
+      { status: 429 }
+    );
+  }
+
+  const resume = await getUserResume(session.userId, resumeId);
   if (!resume) {
     return NextResponse.json({ error: "Resume not found" }, { status: 404 });
   }
@@ -23,6 +46,7 @@ export async function POST(req: Request) {
 
   const completion = await client.responses.create({
     model: "gpt-5.5",
+    max_output_tokens: 4000,
     input: prompt,
     text: {
       format: {
