@@ -6,6 +6,7 @@ import { Footer } from "../components/Footer";
 import { Sparkles } from "lucide-react";
 import { TailoredResume } from "@/models/resume";
 import { formatMonthYear, sortMostRecentFirst } from "@/app/lib/mapToLatex";
+import { useRequireAuth } from "@/app/lib/useRequireAuth";
 import { useRouter } from "next/navigation";
 
 const MAX_REGENERATES = 3;
@@ -21,6 +22,7 @@ const safeFilename = (name: string) =>
 
 export default function TailorePage() {
   const router = useRouter();
+  const { currentUser, authLoading } = useRequireAuth();
   const [loading, setLoading] = useState(true);
   const [tailored, setTailored] = useState<any>(null);
   const [error, setError] = useState("");
@@ -30,6 +32,22 @@ export default function TailorePage() {
   const [tab, setTab] = useState<Tab>("resume");
   const [targetCompany, setTargetCompany] = useState<string | null>(null);
   const [regenerateCount, setRegenerateCount] = useState(0);
+  const [progress, setProgress] = useState(0);
+
+  // Generation takes ~20s. This isn't a real progress signal (there isn't
+  // one from the API) -- it's a perceived-wait indicator that eases toward
+  // 92% and only reaches 100% once the request actually finishes.
+  useEffect(() => {
+    if (!loading) {
+      setProgress(0);
+      return;
+    }
+    setProgress(8);
+    const interval = setInterval(() => {
+      setProgress((p) => (p < 92 ? p + Math.max(1, (92 - p) * 0.1) : p));
+    }, 400);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   const tailor = async () => {
     if (regenerateCount >= MAX_REGENERATES) {
@@ -41,13 +59,14 @@ export default function TailorePage() {
       setLoading(false);
       return;
     }
+    const resumeId = localStorage.getItem("SELECTED_RESUME_ID") || undefined;
     setLoading(true);
     try {
       const res = await fetch("/api/tailor-resume", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ jobDescription: job }),
+        body: JSON.stringify({ jobDescription: job, resumeId }),
       });
 
       const data = await res.json();
@@ -80,6 +99,8 @@ export default function TailorePage() {
     setCoverLetterLoading(true);
     setCoverLetterError("");
 
+    const resumeId = localStorage.getItem("SELECTED_RESUME_ID") || undefined;
+
     try {
       const res = await fetch("/api/tailor-cover-letter", {
         method: "POST",
@@ -88,6 +109,7 @@ export default function TailorePage() {
         body: JSON.stringify({
           jobDescription: job,
           tailoredResume: tailored,
+          resumeId,
         }),
       });
 
@@ -112,11 +134,13 @@ export default function TailorePage() {
       return;
     }
 
+    const resumeId = localStorage.getItem("SELECTED_RESUME_ID") || undefined;
+
     const res = await fetch("/api/tailor-cover-letter/pdf", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ coverLetter: coverLetterBody, company: targetCompany }),
+      body: JSON.stringify({ coverLetter: coverLetterBody, company: targetCompany, resumeId }),
     });
 
     if (!res.ok) {
@@ -135,14 +159,17 @@ export default function TailorePage() {
   };
 
   useEffect(() => {
+    if (authLoading || !currentUser) return;
     tailor();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, currentUser]);
 
   const generatePDF = async (tailoredJson: TailoredResume) => {
+    const resumeId = localStorage.getItem("SELECTED_RESUME_ID") || undefined;
     const res = await fetch("/api/tailor-resume/pdf", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(tailoredJson),
+      body: JSON.stringify({ ...tailoredJson, resumeId }),
     });
 
     const blob = await res.blob();
@@ -162,9 +189,16 @@ export default function TailorePage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center w-full max-w-xs px-6">
           <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-gray-600 mt-3">Tailoring your resume...</p>
+          <p className="text-gray-400 text-sm mb-3">Usually takes about 20 seconds</p>
+          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-indigo-500 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${Math.min(progress, 100)}%` }}
+            />
+          </div>
         </div>
       </div>
     );
