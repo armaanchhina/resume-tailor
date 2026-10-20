@@ -12,8 +12,11 @@ description, and get a one-page tailored resume (and matching cover letter) as a
 - **AI**: OpenAI API (`gpt-5.5`) for tailoring; structured JSON output for the resume,
   free-form text for the cover letter
 - **PDF generation**: resume/cover-letter data is rendered into a LaTeX template
-  (Mustache templating) and compiled with `pdflatex`
+  (Mustache templating) and compiled with `pdflatex` (requires a full TeX Live install — this
+  is why the app can't run on Vercel; see `DEPLOYMENT.md`)
 - **Dev environment**: Docker Compose (app + Postgres + pgAdmin)
+
+For production deployment (Render/Railway/Fly, GitHub, Cloudflare DNS), see `DEPLOYMENT.md`.
 
 ### How the resume data works
 
