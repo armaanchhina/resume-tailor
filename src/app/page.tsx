@@ -1,20 +1,23 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { FileText, Upload, Sparkles, Edit2 } from "lucide-react";
+import { FileText, Upload, Sparkles, Edit2, Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { useAuth } from "./lib/useAuth";
 
+type ResumeSummary = { id: string; name: string };
+
 export default function Home() {
   const router = useRouter();
 
   const { currentUser, authLoading } = useAuth();
-  const [hasResume, setHasResume] = useState(false);
+  const [resumes, setResumes] = useState<ResumeSummary[]>([]);
+  const [selectedResumeId, setSelectedResumeId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [jobDescription, setJobDescription] = useState("");
 
-  const checkForResume = useCallback(async () => {
+  const loadResumes = useCallback(async () => {
     setIsLoading(true);
 
     if (!currentUser) {
@@ -29,10 +32,14 @@ export default function Home() {
       });
 
       const json = await res.json();
-      setHasResume(json.ok ? json.hasResume : false);
+      const list: ResumeSummary[] = json.ok ? json.resumes ?? [] : [];
+      setResumes(list);
+      setSelectedResumeId((current) =>
+        list.some((r) => r.id === current) ? current : list[0]?.id ?? ""
+      );
     } catch (err) {
-      console.error("Error fetching resume:", err);
-      setHasResume(false);
+      console.error("Error fetching resumes:", err);
+      setResumes([]);
     } finally {
       setIsLoading(false);
     }
@@ -40,17 +47,28 @@ export default function Home() {
 
   useEffect(() => {
     if (authLoading) return;
-    checkForResume();
-  }, [authLoading, checkForResume]);
+    loadResumes();
+  }, [authLoading, loadResumes]);
 
   const handleUploadResume = () => {
-    router.push(currentUser ? "/upload-resume" : "/sign-in");
+    if (!currentUser) {
+      router.push("/sign-in");
+      return;
+    }
+    router.push(selectedResumeId ? `/upload-resume?id=${selectedResumeId}` : "/upload-resume");
+  };
+
+  const handleNewResume = () => {
+    router.push("/upload-resume?new=1");
   };
 
   const handleGenerate = () => {
     localStorage.setItem("JOB_DESCRIPTION", jobDescription);
+    localStorage.setItem("SELECTED_RESUME_ID", selectedResumeId);
     router.push("/tailor-resume");
   };
+
+  const hasResume = resumes.length > 0;
 
   if (isLoading) {
     return (
@@ -115,6 +133,34 @@ export default function Home() {
                 Paste the job description below. You'll be able to review the
                 tailored resume and generate a matching cover letter next.
               </p>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Which resume?
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedResumeId}
+                    onChange={(e) => setSelectedResumeId(e.target.value)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none text-sm text-gray-800 bg-white"
+                  >
+                    {resumes.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleNewResume}
+                    title="Create a new resume"
+                    className="px-3 py-2 border-2 border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition flex items-center gap-1 text-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    New
+                  </button>
+                </div>
+              </div>
 
               <textarea
                 value={jobDescription}

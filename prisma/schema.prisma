@@ -40,7 +40,8 @@ model Session {
 model Resume {
   id        String   @id @default(cuid())
   user      User     @relation(fields: [userId], references: [id])
-  userId    String   @unique
+  userId    String
+  name          String   @default("My Resume")
   fullName      String
   email         String
   phone         String?
@@ -55,4 +56,6 @@ model Resume {
   technicalSkillsJson Json?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([userId])
 }

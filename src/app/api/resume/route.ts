@@ -4,6 +4,10 @@ import { getSession } from "@/app/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+const MAX_SUMMARY_LENGTH = 2_000;
+const MAX_ADDITIONAL_INFO_LENGTH = 5_000;
+const MAX_NAME_LENGTH = 200;
+
 function toProjectsJson(raw: any) {
   if (!Array.isArray(raw)) return [];
 
@@ -52,42 +56,58 @@ export async function POST(req: Request) {
 
       const body = await req.json();
 
+      if (!body?.personalInfo?.fullName || typeof body.personalInfo.fullName !== "string") {
+        return NextResponse.json({ ok: false, error: "Full name is required." }, { status: 400 });
+      }
+      if (!body?.personalInfo?.email || typeof body.personalInfo.email !== "string") {
+        return NextResponse.json({ ok: false, error: "Email is required." }, { status: 400 });
+      }
+      if (typeof body?.summary === "string" && body.summary.length > MAX_SUMMARY_LENGTH) {
+        return NextResponse.json(
+          { ok: false, error: `Summary is too long (max ${MAX_SUMMARY_LENGTH} characters).` },
+          { status: 400 }
+        );
+      }
+      if (typeof body?.additionalInfo === "string" && body.additionalInfo.length > MAX_ADDITIONAL_INFO_LENGTH) {
+        return NextResponse.json(
+          { ok: false, error: `Additional info is too long (max ${MAX_ADDITIONAL_INFO_LENGTH} characters).` },
+          { status: 400 }
+        );
+      }
 
       const technicalSkillsJson = toTechnicalSkillsJson(body?.skills?.technical);
       const projectsJson = toProjectsJson(body?.projects);
+      const name = (body?.resumeName || "").trim().slice(0, MAX_NAME_LENGTH) || "My Resume";
 
-        const resume = await prisma.resume.upsert({
-        where: {userId},
-        update: {
-          fullName: body.personalInfo.fullName,
-          email: body.personalInfo.email,
-          phone: body.personalInfo.phone,
-          linkedin: body.personalInfo.linkedin,
-          github: body.personalInfo.github,
-          portfolio: body.personalInfo.portfolio,
-          summary: body.summary,
-          additionalInfo: body.additionalInfo,
-          technicalSkillsJson,
-          workJson: body.workExperience,
-          educationJson: body.education,
-          projectsJson,
-        },
-        create: {
-          userId,
-          fullName: body.personalInfo.fullName,
-          email: body.personalInfo.email,
-          phone: body.personalInfo.phone,
-          linkedin: body.personalInfo.linkedin,
-          github: body.personalInfo.github,
-          portfolio: body.personalInfo.portfolio,
-          summary: body.summary,
-          additionalInfo: body.additionalInfo,
-          technicalSkillsJson,
-          workJson: body.workExperience,
-          educationJson: body.education,
-          projectsJson,
+      const data = {
+        name,
+        fullName: body.personalInfo.fullName,
+        email: body.personalInfo.email,
+        phone: body.personalInfo.phone,
+        linkedin: body.personalInfo.linkedin,
+        github: body.personalInfo.github,
+        portfolio: body.personalInfo.portfolio,
+        summary: body.summary,
+        additionalInfo: body.additionalInfo,
+        technicalSkillsJson,
+        workJson: body.workExperience,
+        educationJson: body.education,
+        projectsJson,
+      };
+
+      let resume;
+      if (body.id) {
+        const updated = await prisma.resume.updateMany({
+          where: { id: body.id, userId },
+          data,
+        });
+        if (updated.count === 0) {
+          return NextResponse.json({ ok: false, error: "Resume not found" }, { status: 404 });
         }
-      });
+        resume = await prisma.resume.findUnique({ where: { id: body.id } });
+      } else {
+        resume = await prisma.resume.create({ data: { userId, ...data } });
+      }
 
       return NextResponse.json({ ok: true, resume });
     } catch (err) {
@@ -106,24 +126,15 @@ export async function GET() {
       )
     }
 
-    const userId = session.userId
-
-    const resume = await prisma.resume.findUnique({
-      where: {userId}
+    const resumes = await prisma.resume.findMany({
+      where: { userId: session.userId },
+      orderBy: { updatedAt: "desc" },
     })
-
-    if (!resume) {
-      return NextResponse.json({
-        ok: true,
-        hasResume: false,
-        resume: null
-      })
-    }
 
     return NextResponse.json({
       ok: true,
-      hasResume: true,
-      resume
+      hasResume: resumes.length > 0,
+      resumes,
     })
   } catch (err) {
     console.error("Resume GET error:", err);
@@ -131,5 +142,32 @@ export async function GET() {
       { ok: false, error: "Server error", hasResume: false },
       { status: 500 }
     );
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ ok: false, error: "Not authenticated" }, { status: 401 });
+    }
+
+    const id = new URL(req.url).searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ ok: false, error: "id is required" }, { status: 400 });
+    }
+
+    const deleted = await prisma.resume.deleteMany({
+      where: { id, userId: session.userId },
+    });
+
+    if (deleted.count === 0) {
+      return NextResponse.json({ ok: false, error: "Resume not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("Resume DELETE error:", err);
+    return NextResponse.json({ ok: false, error: "Server error" }, { status: 500 });
   }
 }

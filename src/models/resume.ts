@@ -29,6 +29,7 @@ export interface WorkExperience {
   }
 
   export interface ResumeFormData {
+    resumeName: string;
     personalInfo: {
       fullName: string;
       email: string;
@@ -126,6 +127,7 @@ export interface WorkExperience {
   
   // Optional: default values for the form
   export const defaultResumeValues: ResumeFormData = {
+    resumeName: "My Resume",
     personalInfo: {
       fullName: "",
       email: "",
@@ -157,17 +159,7 @@ export interface WorkExperience {
         gpa: "",
       },
     ],
-    projects: [
-      {
-        title: "",
-        tech: "",
-        link: "",
-        startDate: "",
-        endDate: "",
-        current: false,
-        bullets: [""],
-      },
-    ],
+    projects: [],
     skills: {
       technical: [
         { category: "Languages", items: "" },
